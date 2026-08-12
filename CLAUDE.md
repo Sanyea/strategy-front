@@ -6,13 +6,20 @@
 
 商业级前端工程骨架 — 基于 create-vite vue-ts 模板（Vite 8、Vue 3.5、TypeScript），已搭建完整目录结构与工程化配置，尚无业务代码。模板自带的 `HelloWorld.vue` / `App.vue` 为占位内容。
 
-> 注意：各 `src` 子目录当前仅含 README.md 说明，`request.ts`、`DefaultLayout`/`BlankLayout`、styles 下 reset/variables/common 等具体文件尚未实现，为计划中内容。
+已就位的接口工具链（后端 Spring Boot + SpringDoc OpenAPI）：
+
+- `@umijs/openapi` 代码生成：`npm run api:gen` 从 `http://localhost:8080/v3/api-docs` 生成 TS 接口代码到根目录临时目录 `.api-gen/`（已 gitignore），再手动移动到 `src/api/modules/<模块>/`。当前后端仅暴露认证接口（register/login/mfa/refresh/logout，JWT 双 Token + 设备绑定），业务接口待后端补充
+- `src/api/modules/request.ts` — axios 请求封装：baseURL 读 `VITE_API_BASE_URL`、Bearer 注入、401 静默刷新重试、设备 ID 持久化
+- 开发代理：`vite.config.ts` 中 `/api` → `http://localhost:8080`（去掉 `/api` 前缀，后端接口位于根路径）
+
+> 注意：`DefaultLayout`/`BlankLayout`、styles 下 reset/variables/common 等文件尚未实现，为计划中内容。`src/api/` 下为生成代码，勿手改。
 
 ## 常用命令
 
 - `npm run dev` — 启动 Vite 开发服务器（默认端口 5173）
 - `npm run build` — 类型检查 + 生产构建：实际执行 `vue-tsc -b && vite build`，产物输出到 `dist/`
 - `npm run preview` — 本地预览生产构建产物
+- `npm run api:gen` — 从后端 OpenAPI spec 生成接口代码（`@umijs/openapi`，产物到 `src/api/`）
 - `npm install` — 安装依赖
 
 当前无 lint/test 脚本（ESLint/Prettier 配置文件已就位，但依赖未安装、脚本未添加）。`npm run build` 是唯一的验证手段。
@@ -23,7 +30,7 @@
 
 - `src/main.ts` — 入口文件，挂载根组件 `App`
 - `src/App.vue` — 根组件
-- `src/api/` — 接口请求层（request.ts 封装 + modules/ 按业务拆分）
+- `src/api/` — 接口请求层（`@umijs/openapi` 生成代码，从 `.api-gen` 手动移动后可按需改名/调整导入；请求封装在 `src/api/modules/request.ts`）
 - `src/assets/` — 经 Vite 编译的静态资源（images/icons/fonts）；`public/` 存放原样复制的静态文件
 - `src/components/` — 全局通用组件（base/ 纯UI封装 + business/ 通用业务组件）
 - `src/composables/` — 组合式函数（useXxx 逻辑复用）
@@ -43,7 +50,8 @@
 关键约定：
 
 - 所有组件使用 Vue 3 `<script setup>` 单文件组件（SFC）
-- `vite.config.ts` 保持最小配置（仅 `@vitejs/plugin-vue`）——**未配置 `@` 路径别名**，当前请使用相对路径导入；目录结构已按别名规范组织，配置 `@` → `src/` 后即可直接使用
+- `@` 路径别名已配置（`vite.config.ts` resolve.alias + `tsconfig.app.json` paths），统一用绝对路径导入：`@/api/modules/request`、`@/api/xxx`
+- `vite.config.ts` 含开发代理（`/api` → `http://localhost:8080`），修改需谨慎
 - TypeScript 使用 project references：`tsconfig.app.json`（应用代码）与 `tsconfig.node.json`（vite 配置），由根 `tsconfig.json` 通过 `vue-tsc -b` 统一引用
 
 ## 代码规范（强制约束）
@@ -98,7 +106,7 @@
 
 ### 导入导出
 
-- 配置 `@` 别名后优先使用绝对路径：`import { getUserList } from '@/api/modules/user'`；当前未配置别名时用相对路径
+- 已配置 `@` 别名，优先使用绝对路径：`import { getUserList } from '@/api/modules/user'`
 - 导入顺序分组（组间空行）：Vue 核心 → 第三方库 → 项目内部（@/） → 相对路径 → type-only 导入 → 样式
 - 工具函数、枚举用具名导出，便于 tree-shaking；组件用默认导出
 
@@ -118,6 +126,7 @@
 ## 工程化配置
 
 - 环境变量：`.env.development` / `.env.production` / `.env.test`，客户端可访问的变量必须以 `VITE_` 开头
+- API 代码生成：`openapi2ts.config.ts` 配置 `@umijs/openapi`（schemaPath/serversPath/projectName/requestLibPath）。后端接口变更后跑 `npm run api:gen`，产物在 `.api-gen/api/`，手动移动到 `src/api/modules/<模块>/`；生成器会清空输出目录，勿直接输出到 `src/api/`，勿手改生成产物
 - ESLint：`.eslintrc.cjs` 已配置（Vue3 + TS 规则），依赖未安装
 - Prettier：`.prettierrc` 已配置（无分号、单引号、100 字符换行、2 空格缩进），依赖未安装
 - Git 提交流程（功能分支 → `dev` → `master`）
