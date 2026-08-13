@@ -4,12 +4,12 @@
 
 ## 项目状态
 
-商业级前端工程骨架 — 基于 create-vite vue-ts 模板（Vite 8、Vue 3.5、TypeScript），已搭建完整目录结构与工程化配置，尚无业务代码。模板自带的 `HelloWorld.vue` / `App.vue` 为占位内容。
+商业级前端工程骨架 — 基于 create-vite vue-ts 模板（Vite 8、Vue 3.5、TypeScript），已搭建完整目录结构与工程化配置。已落地：水墨首页（`/`）与登入/注册页（`/login`）。
 
 已就位的接口工具链（后端 Spring Boot + SpringDoc OpenAPI）：
 
 - `@umijs/openapi` 代码生成：`npm run api:gen` 从 `http://localhost:8080/v3/api-docs` 生成 TS 接口代码到根目录临时目录 `.api-gen/`（已 gitignore），再手动移动到 `src/api/modules/<模块>/`。当前后端仅暴露认证接口（register/login/mfa/refresh/logout，JWT 双 Token + 设备绑定），业务接口待后端补充
-- `src/api/modules/request.ts` — axios 请求封装：baseURL 读 `VITE_API_BASE_URL`、Bearer 注入、401 静默刷新重试、设备 ID 持久化
+- `src/api/modules/request.ts` — axios 请求封装：baseURL 读 `VITE_API_BASE_URL`、Bearer 注入、业务码校验（信封 `code === 200` 成功，HTTP 200 但 code 非 200 抛 `ApiError`）、401 静默刷新重试、设备 ID 持久化
 - 开发代理：`vite.config.ts` 中 `/api` → `http://localhost:8080`（去掉 `/api` 前缀，后端接口位于根路径）
 
 > 注意：`DefaultLayout`/`BlankLayout` 尚未实现，为计划中内容；styles 体系已就位（见「水墨设计系统」）。`src/api/` 下为生成代码，勿手改。
@@ -26,6 +26,10 @@
   - 主色：`--color-primary` 主按钮导航 / `--color-on-primary` 主色上文字 / `--color-primary-soft` 主色淡底
   - 点缀：`--color-accent`（朱砂）/ `--color-accent-blue`（青蓝）/ `--color-accent-green`（石绿）/ `--color-accent-soft`
   - 水墨晕染：`--wash-mist` / `--wash-mist-2`（body 背景远山雾霭，透明度渐变）
+- 16:9 水墨壁纸随机背景：`src/utils/wallpaper.ts`（`applyWallpaper` 挂载前随机一张，与宣纸纱罩整体写入 `--wash-wallpaper-bg`，同一会话内保持稳定，避免页面切换闪烁）
+  - 图片来源 `public/washpaintingstyle/16-9/{animal,city,scenery}/`，三分类共 54 张；新增/删除图片需同步 `CATEGORIES` 计数表
+  - 图片资源**不入 git**（`.gitignore` 排除 `public/washpaintingstyle/`），部署时随 `public/` 目录提供；克隆仓库后需自行补充壁纸目录
+  - 全局消费：`body` 背景 `background-image: var(--wash-wallpaper-bg)`（`src/styles/reset.css`），所有页面自动生效；`:root` 兜底默认值在 `src/styles/variables.css`。**勿用 `url(var(...))` 形式**，会被构建期 CSS 压缩器（lightningcss）拒绝
 - 主题切换：`<html data-theme="mono|mist|tea|wash">`，缺省即方案一（`:root` 兜底）
   - `mono` 经典墨韵黑白（默认）/ `mist` 青灰烟雨 / `tea` 茶褐古雅 / `wash` 淡彩水墨（基底同 mono + 三色点缀）
 - 硬性规则（设计稿强制，页面开发必须遵守）：
@@ -35,7 +39,12 @@
 - 全局 UI 原语类在 `src/styles/common.css`：`.btn--primary/--secondary/--ghost/--accent`、`.card`、`.badge/.tag`、`.input`、`.nav`、`.divider`、`.text--*`；组件内样式仍用 `<style scoped>` 消费 token
 - 落地首页：`src/views/home/index.vue`（模块：首屏/信任条/功能/评价/价格/FAQ/行动按钮/页脚）；默认方案一 `mono`
   - 顶部悬浮主题切换灵动岛（`ThemeIsland`，滚动收缩 + 悬停展开）
-  - 左上角登录书签控件：半矩形 + 底部三角裁切（`clip-path`），纯图标无文字，底色固定点缀色朱砂 `#a85448` 不随主题变化，占位待认证接入
+  - 左上角登录书签控件：半矩形 + 底部三角裁切（`clip-path`），纯图标无文字，底色固定点缀色朱砂 `#a85448` 不随主题变化；已接入 `/login` 登入/注册页
+- 登入/注册页：`src/views/auth/index.vue`（路由 `/login`；单卡片 + 顶部登入/注册开关，事件链切换模式；背景走全局随机壁纸）
+  - `components/AuthMethodSelect.vue` — 流程**第一步**的整屏方式选择器（竖排卡片，可用项可点，未开放项虚框置灰「暂未开放」），登入/注册共用
+  - `components/LoginCard.vue` — 两步：① 选方式（当前仅「账号密码」开放）→ ② 账号密码表单（顶部「选择其它方式」可返回）；命中 MFA（HTTP 403 挑战）原地切换 6 位 TOTP 二次验证
+  - `components/RegisterCard.vue` — 印章步骤条四步：方式 → 账号 → 资料 → 完成；**仅后端信封 `code === 200` 返回后才进入完成步**（已立 + 双 Token 自动登入）；注册完成带账号回登入预填
+  - 支撑工具：`src/utils/device.ts`（buildDeviceInfo / detectChannel 渠道识别）、`src/utils/error.ts`（ApiError + readApiErrorMessage 提取后端 message）
 - 主题切换灵动岛：`src/components/business/ThemeIsland.vue`（悬浮吸顶毛玻璃，滚动后收缩为半透明胶囊，鼠标移入/键盘聚焦展开；写 `<html data-theme>` + localStorage）
 - 侧边栏导航：`src/layouts/AppSidebar.vue`（左侧固定 + 毛玻璃，滚动后自动收缩为图标栏、回顶/鼠标移入展开，移动端 off-canvas 抽屉 + 汉堡触发；`items` 走 `NavItem[]` prop，为占位按钮，路由接入后替换为 router-link）
 
@@ -53,8 +62,8 @@
 
 商业级分层目录结构：
 
-- `src/main.ts` — 入口文件，挂载根组件 `App`
-- `src/App.vue` — 根组件
+- `src/main.ts` — 入口文件：注册路由 + 调用 `applyWallpaper` 随机壁纸后挂载根组件 `App`
+- `src/App.vue` — 根组件（仅 `<RouterView />` 挂路由出口）
 - `src/api/` — 接口请求层（`@umijs/openapi` 生成代码，从 `.api-gen` 手动移动后可按需改名/调整导入；请求封装在 `src/api/modules/request.ts`）
 - `src/assets/` — 经 Vite 编译的静态资源（images/icons/fonts）；`public/` 存放原样复制的静态文件
 - `src/components/` — 全局通用组件（base/ 纯UI封装 + business/ 通用业务组件）
@@ -62,7 +71,7 @@
 - `src/directives/` — 全局自定义指令
 - `src/enums/` — 运行时枚举（含 label 映射）
 - `src/layouts/` — 布局组件（DefaultLayout / BlankLayout）
-- `src/router/` — 路由配置（index.ts 守卫 + modules/ 按模块拆分）
+- `src/router/` — 路由配置（index.ts：`/` home、`/login` auth 懒加载，afterEach 同步 document.title；modules/ 按模块拆分，守卫待接入）
 - `src/stores/` — Pinia 状态管理（modules/ 按模块拆分）
 - `src/styles/` — 全局样式体系（reset/variables/common）
 - `src/types/` — TypeScript 类型声明（.d.ts）

@@ -19,6 +19,10 @@ declare namespace API {
     account: string
     /** 明文密码 */
     password: string
+    /** 登入方式：3-账号密码（当前仅开放） */
+    loginType: '1' | '2' | '3' | '4'
+    /** 登录渠道：3-H5 4-PC（当前仅开放这两个） */
+    registerChannel: '3' | '4'
     /** 客户端设备信息 */
     deviceInfo: DeviceInfo
   }
@@ -50,6 +54,8 @@ declare namespace API {
     email?: string
     /** 昵称（可选，缺省回落用户名） */
     nickname?: string
+    /** 注册渠道：3-H5 4-PC（当前仅开放这两个） */
+    registerChannel: '3' | '4'
     /** 客户端设备信息 */
     deviceInfo: DeviceInfo
   }

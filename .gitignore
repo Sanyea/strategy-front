@@ -25,3 +25,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+/public/washpaintingstyle/16-9/scenery/
+/public/washpaintingstyle/16-9/city/
+/public/washpaintingstyle/
+/public/washpaintingstyle/16-9/animal/
+/public/washpaintingstyle/16-9/

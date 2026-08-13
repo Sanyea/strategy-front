@@ -133,8 +133,8 @@ const faqs: Faq[] = [
     <!-- 主题切换灵动岛：悬浮吸顶，滚动收缩 -->
     <ThemeIsland />
 
-    <!-- 登录书签控件：纯视觉占位，待认证模块接入后指向登录/注册页 -->
-    <button type="button" class="auth-tag" title="登录 / 注册" aria-label="登录 / 注册">
+    <!-- 登录书签：半矩形 + 底部三角裁切，指向登入/注册页 -->
+    <RouterLink to="/login" class="auth-tag" title="登录 / 注册" aria-label="登录 / 注册">
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -146,7 +146,7 @@ const faqs: Faq[] = [
       >
         <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" />
       </svg>
-    </button>
+    </RouterLink>
 
       <main>
       <!-- 首屏区 -->

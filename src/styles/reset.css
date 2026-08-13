@@ -17,7 +17,12 @@ html {
 body {
   margin: 0;
   color: var(--color-text);
+  /* 全局背景：16:9 水墨壁纸（applyWallpaper 随机注入）+ 宣纸色渐变纱罩，随主题 token 换色 */
   background-color: var(--color-bg);
+  background-image: var(--wash-wallpaper-bg);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   font-family: var(--font-sans);
   font-size: var(--text-base);
   line-height: 1.7;

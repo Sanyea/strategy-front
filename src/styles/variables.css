@@ -59,6 +59,15 @@
   /* 投影（低透明墨色，无厚重阴影） */
   --shadow-soft: 0 4px 24px rgba(26, 26, 26, 0.06);
 
+  /* 16:9 水墨壁纸背景（applyWallpaper 随机注入最下层 url；此默认值供 JS 执行前的首帧兜底） */
+  --wash-wallpaper-bg:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-bg) 84%, transparent),
+      color-mix(in srgb, var(--color-bg) 90%, transparent)
+    ),
+    url('/washpaintingstyle/16-9/scenery/1.avif');
+
   color-scheme: light;
 }
 
@@ -87,6 +96,10 @@
   --color-accent-blue: #595959;
   --color-accent-green: #595959;
   --color-accent-soft: rgba(26, 26, 26, 0.08);
+
+  /* 错误提示：暗红朱砂类，仅小面积用于表单错误 */
+  --color-danger: #9c4a3c;
+  --color-danger-soft: rgba(156, 74, 60, 0.12);
 
   /* 水墨晕染雾层（透明度渐变） */
   --wash-mist: rgba(26, 26, 26, 0.05);
@@ -117,6 +130,9 @@
   --color-accent-green: #4a646c;
   --color-accent-soft: rgba(74, 100, 108, 0.12);
 
+  --color-danger: #8a4a42;
+  --color-danger-soft: rgba(138, 74, 66, 0.14);
+
   --wash-mist: rgba(74, 100, 108, 0.07);
   --wash-mist-2: rgba(74, 100, 108, 0.04);
 }
@@ -144,6 +160,9 @@
   --color-accent-blue: #b89c86;
   --color-accent-green: #b89c86;
   --color-accent-soft: rgba(122, 92, 72, 0.12);
+
+  --color-danger: #8a3f2f;
+  --color-danger-soft: rgba(138, 63, 47, 0.12);
 
   --wash-mist: rgba(122, 92, 72, 0.06);
   --wash-mist-2: rgba(122, 92, 72, 0.04);
@@ -173,6 +192,9 @@
   --color-accent-blue: #486e82; /* 山石青蓝：图标 / 边框 / 小众装饰 */
   --color-accent-green: #5a7c6e; /* 草木石绿：辅助装饰 / 细分区块 */
   --color-accent-soft: rgba(168, 84, 72, 0.12);
+
+  --color-danger: #a85448;
+  --color-danger-soft: rgba(168, 84, 72, 0.14);
 
   --wash-mist: rgba(26, 26, 26, 0.05);
   --wash-mist-2: rgba(168, 84, 72, 0.05);
