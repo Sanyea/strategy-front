@@ -1,0 +1,4 @@
+/* 全局样式入口：变量 → 重置 → 通用 */
+@import './variables.css';
+@import './reset.css';
+@import './common.css';

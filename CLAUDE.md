@@ -12,7 +12,32 @@
 - `src/api/modules/request.ts` — axios 请求封装：baseURL 读 `VITE_API_BASE_URL`、Bearer 注入、401 静默刷新重试、设备 ID 持久化
 - 开发代理：`vite.config.ts` 中 `/api` → `http://localhost:8080`（去掉 `/api` 前缀，后端接口位于根路径）
 
-> 注意：`DefaultLayout`/`BlankLayout`、styles 下 reset/variables/common 等文件尚未实现，为计划中内容。`src/api/` 下为生成代码，勿手改。
+> 注意：`DefaultLayout`/`BlankLayout` 尚未实现，为计划中内容；styles 体系已就位（见「水墨设计系统」）。`src/api/` 下为生成代码，勿手改。
+
+## 水墨设计系统
+
+全站采用极简新中式水墨风，四套专属色系，CSS 变量驱动，零新增依赖（纯 CSS）。
+
+- 文件：色值 token 在 `src/styles/variables.css`；入口 `src/styles/index.css`（variables → reset → common）
+- 语义色值命名，跨组件统一消费，禁止在组件里直接写十六进制色值：
+  - 底色：`--color-bg` 宣纸 / `--color-bg-soft` 卡片
+  - 文字：`--color-ink` 标题强调 / `--color-text` 正文 / `--color-text-secondary` 次级 / `--color-text-weak` 弱化占位
+  - 边框：`--color-border` / `--color-border-soft` 弱化分割线
+  - 主色：`--color-primary` 主按钮导航 / `--color-on-primary` 主色上文字 / `--color-primary-soft` 主色淡底
+  - 点缀：`--color-accent`（朱砂）/ `--color-accent-blue`（青蓝）/ `--color-accent-green`（石绿）/ `--color-accent-soft`
+  - 水墨晕染：`--wash-mist` / `--wash-mist-2`（body 背景远山雾霭，透明度渐变）
+- 主题切换：`<html data-theme="mono|mist|tea|wash">`，缺省即方案一（`:root` 兜底）
+  - `mono` 经典墨韵黑白（默认）/ `mist` 青灰烟雨 / `tea` 茶褐古雅 / `wash` 淡彩水墨（基底同 mono + 三色点缀）
+- 硬性规则（设计稿强制，页面开发必须遵守）：
+  - 禁止纯白 `#FFF` / 纯黑 `#000`，底色一律用宣纸 token
+  - 水墨晕染靠 opacity / 透明度渐变实现，无生硬实色块、无厚重色块堆积
+  - 彩色（accent 系）仅小面积点缀（徽标 / 关键词 / 装饰线），不用于大面积背景与主色调
+- 全局 UI 原语类在 `src/styles/common.css`：`.btn--primary/--secondary/--ghost/--accent`、`.card`、`.badge/.tag`、`.input`、`.nav`、`.divider`、`.text--*`；组件内样式仍用 `<style scoped>` 消费 token
+- 落地首页：`src/views/home/index.vue`（模块：首屏/信任条/功能/评价/价格/FAQ/行动按钮/页脚）；默认方案一 `mono`
+  - 顶部悬浮主题切换灵动岛（`ThemeIsland`，滚动收缩 + 悬停展开）
+  - 左上角登录书签控件：半矩形 + 底部三角裁切（`clip-path`），纯图标无文字，底色固定点缀色朱砂 `#a85448` 不随主题变化，占位待认证接入
+- 主题切换灵动岛：`src/components/business/ThemeIsland.vue`（悬浮吸顶毛玻璃，滚动后收缩为半透明胶囊，鼠标移入/键盘聚焦展开；写 `<html data-theme>` + localStorage）
+- 侧边栏导航：`src/layouts/AppSidebar.vue`（左侧固定 + 毛玻璃，滚动后自动收缩为图标栏、回顶/鼠标移入展开，移动端 off-canvas 抽屉 + 汉堡触发；`items` 走 `NavItem[]` prop，为占位按钮，路由接入后替换为 router-link）
 
 ## 常用命令
 
