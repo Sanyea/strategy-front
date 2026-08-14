@@ -69,18 +69,18 @@ declare namespace API {
   }
 
   type IBasePageRoleVO = {
+    pages?: number
     size?: number
     total?: number
     records?: RoleVO[]
-    pages?: number
     current?: number
   }
 
   type IBasePageUserRoleVO = {
+    pages?: number
     size?: number
     total?: number
     records?: UserRoleVO[]
-    pages?: number
     current?: number
   }
 
@@ -118,6 +118,8 @@ declare namespace API {
     /** 父资源 ID，0-根 */
     parentId?: number
     permissionName?: string
+    /** 前端标题 */
+    title?: string
     /** 资源类型 1-目录 2-菜单 3-按钮 4-接口 */
     permissionType?: 'DIRECTORY' | 'MENU' | 'BUTTON' | 'INTERFACE'
     /** 权限标识，如 system:user:create（按钮/接口用，可空） */
@@ -133,6 +135,8 @@ declare namespace API {
     sortOrder?: number
     /** 是否显示（按钮/接口忽略） */
     isVisible?: 'NO' | 'YES'
+    /** 是否需要权限控制 0-否 1-是 */
+    requiresAuth?: 'NO' | 'YES'
     remark?: string
   }
 
@@ -158,6 +162,8 @@ declare namespace API {
     /** 父资源 ID，0-根 */
     parentId?: number
     permissionName?: string
+    /** 前端标题 */
+    title?: string
     /** 资源类型 1-目录 2-菜单 3-按钮 4-接口 */
     permissionType?: 'DIRECTORY' | 'MENU' | 'BUTTON' | 'INTERFACE'
     /** 权限标识，如 system:user:create */
@@ -176,6 +182,8 @@ declare namespace API {
     status?: 'DISABLED' | 'NORMAL'
     /** 是否内置资源 */
     isBuiltIn?: 'NO' | 'YES'
+    /** 是否需要权限控制 0-否 1-是 */
+    requiresAuth?: 'NO' | 'YES'
     remark?: string
     createTime?: string
     updateTime?: string
