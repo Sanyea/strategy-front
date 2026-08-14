@@ -3,12 +3,16 @@
  *
  * - baseURL 从 VITE_API_BASE_URL 读取（见 .env.*），缺省 /api
  * - 请求自动携带 accessToken（Bearer）
- * - 响应返回后端统一信封 { code, message, data, timestamp }，不做业务码校验
- *   （成功码约定未知，待后端文档确认后在此补充校验）
+ * - 响应返回后端统一信封 { code, message, data, timestamp }，校验业务码：
+ *   code === 200 为成功；HTTP 200 但 code 非 200 抛 ApiError（业务失败）
  * - 401 时用 refreshToken 静默刷新一次并重试原请求，刷新失败则清空凭证
  */
 import axios from 'axios'
 import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import { ApiError } from '@/utils/error'
+
+/** 后端统一信封成功码（SUCCESS(200, "操作成功")） */
+const SUCCESS_CODE = 200
 
 /** 凭证存储键 */
 const TOKEN_KEY = 'strategy-front-token'
@@ -78,9 +82,16 @@ http.interceptors.request.use((config) => {
   return config
 })
 
-// 响应拦截：解包信封 + 401 静默刷新重试
+// 响应拦截：业务码校验 + 解包信封 + 401 静默刷新重试
 http.interceptors.response.use(
-  (response: AxiosResponse) => response.data,
+  (response: AxiosResponse) => {
+    const body = response.data as { code?: number; message?: string } | undefined
+    // HTTP 200 但信封 code 非成功 → 业务失败，抛 ApiError（携带 code / message）
+    if (body && typeof body.code === 'number' && body.code !== SUCCESS_CODE) {
+      return Promise.reject(new ApiError(body.code, body.message ?? '请求失败'))
+    }
+    return response.data
+  },
   async (error) => {
     const config = error.config as InternalAxiosRequestConfig & { _retried?: boolean }
     const status = error.response?.status

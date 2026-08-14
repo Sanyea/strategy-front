@@ -1,0 +1,201 @@
+/* ============================================================
+   水墨设计 Token —— 主题色变量
+   四套专属色系，通过 <html data-theme="..."> 切换：
+     mono —— 方案一 经典墨韵黑白（默认，:root 兜底）
+     mist —— 方案二 青灰烟雨
+     tea  —— 方案三 茶褐古雅
+     wash —— 方案四 淡彩水墨
+   原则：拒绝纯白底色 / 纯黑文字 / 生硬实色块；水墨质感靠透明度渐变。
+   ============================================================ */
+
+/* ---------- 跨主题基础变量（间距 / 圆角 / 字号 / 字体 / 布局） ---------- */
+:root {
+  /* 布局 */
+  --layout-max-width: 1200px;
+  --layout-header-height: 64px;
+
+  /* 间距 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* 圆角（水墨极简，小半径为主） */
+  --radius-xs: 2px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+
+  /* 字号 */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-display: 40px;
+  --text-hero: 56px;
+
+  /* 字重 */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* 字体（系统字体栈，无外链字体依赖；楷体作大字题显，衬线作标题） */
+  --font-display: 'KaiTi', '楷体', 'STKaiti', 'KaiTi_GB2312', 'Noto Serif SC',
+    'SimSun', serif;
+  --font-serif: 'Songti SC', 'STSong', 'SimSun', 'Noto Serif SC', serif;
+  --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', system-ui,
+    'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', Consolas, 'Courier New', monospace;
+
+  /* 投影（低透明墨色，无厚重阴影） */
+  --shadow-soft: 0 4px 24px rgba(26, 26, 26, 0.06);
+
+  /* 16:9 水墨壁纸背景（applyWallpaper 随机注入最下层 url；此默认值供 JS 执行前的首帧兜底） */
+  --wash-wallpaper-bg:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-bg) 84%, transparent),
+      color-mix(in srgb, var(--color-bg) 90%, transparent)
+    ),
+    url('/washpaintingstyle/16-9/scenery/1.avif');
+
+  color-scheme: light;
+}
+
+/* ============================================================
+   方案一 经典墨韵黑白 —— 正统极简水墨（默认）
+   大面积留白，纯墨色层次区分层级，无彩色点缀。
+   ============================================================ */
+:root,
+[data-theme='mono'] {
+  --color-bg: #f7f4ed; /* 宣纸米白（替代纯白） */
+  --color-bg-soft: #efeae0; /* 卡片底色（微深宣纸） */
+  --color-ink: #1a1a1a; /* 浓墨黑：标题 / 重点按钮 / 核心强调 */
+  --color-text: #222222; /* 主墨黑：正文 */
+  --color-text-secondary: #595959; /* 次墨灰：次要文字 / 分割线 / 边框 */
+  --color-text-weak: #b8b8b8; /* 浅墨灰：辅助文字 / 占位 */
+
+  --color-border: #595959;
+  --color-border-soft: rgba(89, 89, 89, 0.18);
+
+  --color-primary: #1a1a1a; /* 主按钮 / 导航 */
+  --color-on-primary: #f7f4ed;
+  --color-primary-soft: rgba(26, 26, 26, 0.08);
+
+  /* 无彩色点缀，点缀位用墨色兜底 */
+  --color-accent: #1a1a1a;
+  --color-accent-blue: #595959;
+  --color-accent-green: #595959;
+  --color-accent-soft: rgba(26, 26, 26, 0.08);
+
+  /* 错误提示：暗红朱砂类，仅小面积用于表单错误 */
+  --color-danger: #9c4a3c;
+  --color-danger-soft: rgba(156, 74, 60, 0.12);
+
+  /* 水墨晕染雾层（透明度渐变） */
+  --wash-mist: rgba(26, 26, 26, 0.05);
+  --wash-mist-2: rgba(26, 26, 26, 0.03);
+}
+
+/* ============================================================
+   方案二 青灰烟雨 —— 清冷山水水墨
+   冷调低饱和，远山雾霭意境，雾感透明晕染。
+   ============================================================ */
+[data-theme='mist'] {
+  --color-bg: #f5f7f6; /* 浅青宣纸 */
+  --color-bg-soft: #d1dbdd; /* 雾灰：卡片 / 晕染背景 / 弱化区块 */
+  --color-ink: #232b2d; /* 深墨青：标题 */
+  --color-text: #232b2d; /* 正文 / 基础底色 */
+  --color-text-secondary: #839ca3; /* 浅青灰：次级元素 */
+  --color-text-weak: rgba(35, 43, 45, 0.4);
+
+  --color-border: #839ca3;
+  --color-border-soft: rgba(131, 156, 163, 0.25);
+
+  --color-primary: #4a646c; /* 烟青：导航 / 主按钮 / 核心模块 */
+  --color-on-primary: #f5f7f6;
+  --color-primary-soft: rgba(74, 100, 108, 0.12);
+
+  --color-accent: #4a646c;
+  --color-accent-blue: #4a646c;
+  --color-accent-green: #4a646c;
+  --color-accent-soft: rgba(74, 100, 108, 0.12);
+
+  --color-danger: #8a4a42;
+  --color-danger-soft: rgba(138, 74, 66, 0.14);
+
+  --wash-mist: rgba(74, 100, 108, 0.07);
+  --wash-mist-2: rgba(74, 100, 108, 0.04);
+}
+
+/* ============================================================
+   方案三 茶褐古雅 —— 书卷复古水墨
+   暖调低饱和，古籍书卷质感，层级稳重雅致。
+   ============================================================ */
+[data-theme='tea'] {
+  --color-bg: #f8f2e9; /* 暖调宣纸米黄 */
+  --color-bg-soft: #eae0d5; /* 淡米卡其：卡片 / 分区模块底色 */
+  --color-ink: #7a5c48; /* 赭石茶褐：标题 / 导航 / 重点模块 */
+  --color-text: #38302b; /* 炭灰：正文（复古沉稳） */
+  --color-text-secondary: #b89c86; /* 浅茶褐：辅助色 / 次级文字 */
+  --color-text-weak: rgba(56, 48, 43, 0.42);
+
+  --color-border: #b89c86;
+  --color-border-soft: rgba(184, 156, 134, 0.3);
+
+  --color-primary: #7a5c48; /* 赭石茶褐：主按钮 */
+  --color-on-primary: #f8f2e9;
+  --color-primary-soft: rgba(122, 92, 72, 0.12);
+
+  --color-accent: #7a5c48;
+  --color-accent-blue: #b89c86;
+  --color-accent-green: #b89c86;
+  --color-accent-soft: rgba(122, 92, 72, 0.12);
+
+  --color-danger: #8a3f2f;
+  --color-danger-soft: rgba(138, 63, 47, 0.12);
+
+  --wash-mist: rgba(122, 92, 72, 0.06);
+  --wash-mist-2: rgba(122, 92, 72, 0.04);
+}
+
+/* ============================================================
+   方案四 淡彩水墨 —— 浅绛山水
+   基底沿用经典墨色体系，莫兰迪国风彩色仅小面积点缀。
+   ============================================================ */
+[data-theme='wash'] {
+  --color-bg: #f7f4ed;
+  --color-bg-soft: #efeae0;
+  --color-ink: #1a1a1a;
+  --color-text: #222222;
+  --color-text-secondary: #595959;
+  --color-text-weak: #b8b8b8;
+
+  --color-border: #595959;
+  --color-border-soft: rgba(89, 89, 89, 0.18);
+
+  --color-primary: #1a1a1a;
+  --color-on-primary: #f7f4ed;
+  --color-primary-soft: rgba(26, 26, 26, 0.08);
+
+  /* 点缀色（低饱和莫兰迪，仅小面积使用） */
+  --color-accent: #a85448; /* 朱砂淡红：重点标记 / 关键词强调 */
+  --color-accent-blue: #486e82; /* 山石青蓝：图标 / 边框 / 小众装饰 */
+  --color-accent-green: #5a7c6e; /* 草木石绿：辅助装饰 / 细分区块 */
+  --color-accent-soft: rgba(168, 84, 72, 0.12);
+
+  --color-danger: #a85448;
+  --color-danger-soft: rgba(168, 84, 72, 0.14);
+
+  --wash-mist: rgba(26, 26, 26, 0.05);
+  --wash-mist-2: rgba(168, 84, 72, 0.05);
+}

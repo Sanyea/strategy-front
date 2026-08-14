@@ -4,15 +4,53 @@
 
 ## 项目状态
 
-商业级前端工程骨架 — 基于 create-vite vue-ts 模板（Vite 8、Vue 3.5、TypeScript），已搭建完整目录结构与工程化配置，尚无业务代码。模板自带的 `HelloWorld.vue` / `App.vue` 为占位内容。
+商业级前端工程骨架 — 基于 create-vite vue-ts 模板（Vite 8、Vue 3.5、TypeScript），已搭建完整目录结构与工程化配置。已落地：水墨首页（`/`）与登入/注册页（`/login`）。
 
 已就位的接口工具链（后端 Spring Boot + SpringDoc OpenAPI）：
 
-- `@umijs/openapi` 代码生成：`npm run api:gen` 从 `http://localhost:8080/v3/api-docs` 生成 TS 接口代码到根目录临时目录 `.api-gen/`（已 gitignore），再手动移动到 `src/api/modules/<模块>/`。当前后端仅暴露认证接口（register/login/mfa/refresh/logout，JWT 双 Token + 设备绑定），业务接口待后端补充
-- `src/api/modules/request.ts` — axios 请求封装：baseURL 读 `VITE_API_BASE_URL`、Bearer 注入、401 静默刷新重试、设备 ID 持久化
+- `@umijs/openapi` 代码生成：`npm run api:gen` 从 `http://localhost:8080/v3/api-docs` 生成 TS 接口代码到根目录临时目录 `.api-gen/`（已 gitignore），再手动移动到 `src/api/modules/<模块>/`。当前后端暴露两大模块：**auth**（register/login/mfa/refresh/logout，JWT 双 Token + 设备绑定）与 **rbac**（debug/permission/role 三个平级管理页，挂 RBAC 目录下；侧边栏按 `myMenuTree` 渲染并前端二次过滤，见下方说明）
+- `src/api/modules/` 结构（生成代码，勿手改业务逻辑）：
+  - `request.ts` — axios 请求封装：baseURL 读 `VITE_API_BASE_URL`、Bearer 注入、业务码校验（信封 `code === 200` 成功，HTTP 200 但 code 非 200 抛 `ApiError`）、401 静默刷新重试、设备 ID 持久化
+  - `typings.d.ts` — 全模块共享 `namespace API` 类型声明（auth + rbac 合并，模块级共用，勿拆回各模块）
+  - `auth/`、`rbac/` — 按模块接口文件；`index.ts` 为聚合 barrel（默认导出 `{ auth, rbacRole, rbacPermission, ... }`）
+  - **手动移动后必须修正跨模块导入**：生成器会写成 `../.api-gen/...`，移到 `src/api/modules/` 后须改为 `./auth/auth.ts` 等相对路径，勿依赖 gitignored 的 `.api-gen`
 - 开发代理：`vite.config.ts` 中 `/api` → `http://localhost:8080`（去掉 `/api` 前缀，后端接口位于根路径）
 
-> 注意：`DefaultLayout`/`BlankLayout`、styles 下 reset/variables/common 等文件尚未实现，为计划中内容。`src/api/` 下为生成代码，勿手改。
+> 注意：路由已拆为「基础公共静态路由 + 动态路由」：`src/router/index.ts` 仅保留首页 `/`、登入注册 `/login`；`/dashboard` 与 `/rbac/*` 等受保护路由由路由守卫登录后拉 `myMenuTree` 经 `src/router/dynamic.ts` 动态 `addRoute`（顶层锚 `DefaultLayout`，深层目录拍平，`componentPath` 经 `import.meta.glob('/src/views/**/*.vue')` 解析）。**404 兜底必须等动态路由全部 addRoute 完成之后再注册**，否则会拦截动态路由；登出时 `uninstallDynamicRoutes` 清理旧账号路由防跨账号残留。`DefaultLayout` 单一认证布局（侧边栏后端菜单树 + 二次权限过滤 + 面包屑 + 灵动岛）；`BlankLayout` 尚未实现，为计划中内容。styles 体系已就位（见「水墨设计系统」）。`src/api/` 下为生成代码，勿手改业务逻辑。
+
+## 水墨设计系统
+
+全站采用极简新中式水墨风，四套专属色系，CSS 变量驱动，零新增依赖（纯 CSS）。
+
+- 文件：色值 token 在 `src/styles/variables.css`；入口 `src/styles/index.css`（variables → reset → common）
+- 语义色值命名，跨组件统一消费，禁止在组件里直接写十六进制色值：
+  - 底色：`--color-bg` 宣纸 / `--color-bg-soft` 卡片
+  - 文字：`--color-ink` 标题强调 / `--color-text` 正文 / `--color-text-secondary` 次级 / `--color-text-weak` 弱化占位
+  - 边框：`--color-border` / `--color-border-soft` 弱化分割线
+  - 主色：`--color-primary` 主按钮导航 / `--color-on-primary` 主色上文字 / `--color-primary-soft` 主色淡底
+  - 点缀：`--color-accent`（朱砂）/ `--color-accent-blue`（青蓝）/ `--color-accent-green`（石绿）/ `--color-accent-soft`
+  - 水墨晕染：`--wash-mist` / `--wash-mist-2`（body 背景远山雾霭，透明度渐变）
+- 16:9 水墨壁纸随机背景：`src/utils/wallpaper.ts`（`applyWallpaper` 挂载前随机一张，与宣纸纱罩整体写入 `--wash-wallpaper-bg`，同一会话内保持稳定，避免页面切换闪烁）
+  - 图片来源 `public/washpaintingstyle/16-9/{animal,city,scenery}/`，三分类共 54 张；新增/删除图片需同步 `CATEGORIES` 计数表
+  - 图片资源**不入 git**（`.gitignore` 排除 `public/washpaintingstyle/`），部署时随 `public/` 目录提供；克隆仓库后需自行补充壁纸目录
+  - 全局消费：`body` 背景 `background-image: var(--wash-wallpaper-bg)`（`src/styles/reset.css`），所有页面自动生效；`:root` 兜底默认值在 `src/styles/variables.css`。**勿用 `url(var(...))` 形式**，会被构建期 CSS 压缩器（lightningcss）拒绝
+- 主题切换：`<html data-theme="mono|mist|tea|wash">`，缺省即方案一（`:root` 兜底）
+  - `mono` 经典墨韵黑白（默认）/ `mist` 青灰烟雨 / `tea` 茶褐古雅 / `wash` 淡彩水墨（基底同 mono + 三色点缀）
+- 硬性规则（设计稿强制，页面开发必须遵守）：
+  - 禁止纯白 `#FFF` / 纯黑 `#000`，底色一律用宣纸 token
+  - 水墨晕染靠 opacity / 透明度渐变实现，无生硬实色块、无厚重色块堆积
+  - 彩色（accent 系）仅小面积点缀（徽标 / 关键词 / 装饰线），不用于大面积背景与主色调
+- 全局 UI 原语类在 `src/styles/common.css`：`.btn--primary/--secondary/--ghost/--accent`、`.card`、`.badge/.tag`、`.input`、`.nav`、`.divider`、`.text--*`；组件内样式仍用 `<style scoped>` 消费 token
+- 落地首页：`src/views/home/index.vue`（模块：首屏/信任条/功能/评价/价格/FAQ/行动按钮/页脚）；默认方案一 `mono`
+  - 顶部悬浮主题切换灵动岛（`ThemeIsland`，滚动收缩 + 悬停展开）
+  - 左上角登录书签控件：半矩形 + 底部三角裁切（`clip-path`），纯图标无文字，底色固定点缀色朱砂 `#a85448` 不随主题变化；已接入 `/login` 登入/注册页
+- 登入/注册页：`src/views/auth/index.vue`（路由 `/login`；单卡片 + 顶部登入/注册开关，事件链切换模式；背景走全局随机壁纸）
+  - `components/AuthMethodSelect.vue` — 流程**第一步**的整屏方式选择器（竖排卡片，可用项可点，未开放项虚框置灰「暂未开放」），登入/注册共用
+  - `components/LoginCard.vue` — 两步：① 选方式（当前仅「账号密码」开放）→ ② 账号密码表单（顶部「选择其它方式」可返回）；命中 MFA（HTTP 403 挑战）原地切换 6 位 TOTP 二次验证
+  - `components/RegisterCard.vue` — 印章步骤条四步：方式 → 账号 → 资料 → 完成；**仅后端信封 `code === 200` 返回后才进入完成步**（已立 + 双 Token 自动登入）；注册完成带账号回登入预填
+  - 支撑工具：`src/utils/device.ts`（buildDeviceInfo / detectChannel 渠道识别）、`src/utils/error.ts`（ApiError + readApiErrorMessage 提取后端 message）
+- 主题切换灵动岛：`src/components/business/ThemeIsland.vue`（悬浮吸顶毛玻璃，滚动后收缩为半透明胶囊，鼠标移入/键盘聚焦展开；写 `<html data-theme>` + localStorage）
+- 侧边栏导航：`src/layouts/AppSidebar.vue`（左侧固定 + 毛玻璃，滚动后自动收缩为图标栏、回顶/鼠标移入展开，移动端 off-canvas 抽屉 + 汉堡触发；`items` 走 `NavItem[]` prop，支持嵌套目录渲染——`AppSidebarNav.vue` 递归组件，叶子路由项渲染为 router-link，由后端 `myMenuTree` 二次过滤后驱动）
 
 ## 常用命令
 
@@ -26,26 +64,146 @@
 
 ## 架构
 
-商业级分层目录结构：
+商业级分层目录结构，每层有明确的存放规则与约束：
 
-- `src/main.ts` — 入口文件，挂载根组件 `App`
-- `src/App.vue` — 根组件
-- `src/api/` — 接口请求层（`@umijs/openapi` 生成代码，从 `.api-gen` 手动移动后可按需改名/调整导入；请求封装在 `src/api/modules/request.ts`）
-- `src/assets/` — 经 Vite 编译的静态资源（images/icons/fonts）；`public/` 存放原样复制的静态文件
-- `src/components/` — 全局通用组件（base/ 纯UI封装 + business/ 通用业务组件）
-- `src/composables/` — 组合式函数（useXxx 逻辑复用）
-- `src/directives/` — 全局自定义指令
-- `src/enums/` — 运行时枚举（含 label 映射）
-- `src/layouts/` — 布局组件（DefaultLayout / BlankLayout）
-- `src/router/` — 路由配置（index.ts 守卫 + modules/ 按模块拆分）
-- `src/stores/` — Pinia 状态管理（modules/ 按模块拆分）
-- `src/styles/` — 全局样式体系（reset/variables/common）
-- `src/types/` — TypeScript 类型声明（.d.ts）
-- `src/utils/` — 纯工具函数（无业务依赖）
-- `src/views/` — 业务页面（按模块聚合，模块内 components/ 放独有组件）
+### `src/api/` — 接口请求层
 
+所有后端 API 统一管理，禁止组件中直接调用 axios。
 
-每个目录下均有 README.md 说明用途与规范。
+- `request.ts`：Axios 实例封装（请求/响应拦截器、Token 注入、统一错误处理、超时配置）
+- `modules/`：按业务模块拆分的接口文件（`user.ts`、`system.ts` 等）
+- 每个接口函数必须定义完整的 TypeScript 类型（请求参数、响应数据）
+- 后端接口变更只修改本层，不影响业务组件
+
+### `src/api/modules/` — 按业务模块拆分
+
+```typescript
+import request from '../request'
+// 获取用户列表
+export function getUserList(params: UserListParams) {
+  return request.get<UserListResult>('/user/list', { params })
+}
+```
+
+- 函数命名：动词 + 业务名，如 `getUserList`、`createUser`
+- 每个函数必须标注请求参数和返回值类型
+
+### `src/assets/` — 经 Vite 编译的静态资源
+
+| 特性 | src/assets | public |
+|------|-----------|--------|
+| Vite 处理 | 编译、压缩、hash 重命名 | 原样复制 |
+| 引用方式 | `import logo from './logo.png'` | `/logo.png` |
+| 适用场景 | 组件内使用的小资源 | 不需编译的大文件 |
+
+- `images/`：图片资源，优先 webp 格式，kebab-case 命名，超 200KB 考虑压缩或 CDN
+- `icons/`：SVG 图标，kebab-case 命名，可配合 `vite-plugin-svg-icons` 实现雪碧图
+- `fonts/`：字体文件，优先 woff2，兼容性不足时补充 ttf，通过 `@font-face` 声明
+
+### `src/components/` — 全局通用组件
+
+多模块都会用到的组件放这里，仅单页面使用的组件禁止放入。
+
+- `base/`：基础 UI 组件层（对第三方 UI 库的二次封装，与业务完全解耦）
+  - `BaseTable`（分页/查询/列配置）、`BaseButton`（权限控制/防抖）、`BaseDialog`（统一标题/底部按钮）、`BaseForm`（表单校验/提交流程）
+  - 保持与原 UI 库 API 兼容，通过 props 扩展能力，便于后续换 UI 库
+- `business/`：通用业务组件层（多个页面复用的业务组件）
+  - `UserAvatar`（头像+在线状态）、`UploadFile`（文件上传）、`DictSelect`（字典下拉）、`ImagePreview`（图片预览）
+  - 必须通过 props 接收数据，不直接耦合具体页面接口，复杂逻辑抽离到 composables
+
+### 组件归属决策树
+
+```
+多模块复用？
+├── 是 + 纯UI无业务 → src/components/base/
+├── 是 + 含业务逻辑 → src/components/business/
+└── 否（仅单模块用）→ src/views/[模块]/components/
+```
+
+### `src/composables/` — 组合式函数
+
+以 `use` 开头的函数，封装可复用的响应式逻辑：
+
+- `useTable.ts`（表格分页/查询/重置）、`useUpload.ts`（文件上传）、`useDarkMode.ts`（暗黑模式）、`usePermission.ts`（权限判断）、`useDebounce.ts`（防抖封装）
+- 返回响应式状态和操作方法，不依赖具体组件，纯逻辑封装
+
+### `src/directives/` — 全局自定义指令
+
+在 `main.ts` 中全局注册，模板中使用：
+
+- `v-permission`（权限控制）、`v-copy`（点击复制）、`v-debounce`（防抖点击）、`v-lazy`（图片懒加载）
+
+### `src/enums/` — 运行时枚举
+
+与 `types` 的区别：enums 编译后保留为 JS 对象，types 编译后完全消失。
+
+```typescript
+export enum UserStatus { DISABLED = 0, ENABLED = 1 }
+export const UserStatusLabel: Record<UserStatus, string> = {
+  [UserStatus.DISABLED]: '禁用', [UserStatus.ENABLED]: '启用'
+}
+```
+
+- 枚举值使用数字或字符串常量，配套提供 label 映射对象用于页面展示
+
+### `src/layouts/` — 布局组件
+
+只负责结构框架，不包含业务逻辑，通过 `<router-view />` 渲染子页面。
+
+- `DefaultLayout.vue`：单一认证布局（侧边栏后端菜单树 + 二次权限过滤 + 面包屑 + 灵动岛 + 内容区），`/dashboard` 与 `/rbac/*` 共用
+- `BlankLayout.vue`：空白布局（登录页、全屏页使用，尚未实现）
+
+### `src/router/` — 路由配置
+
+- `index.ts`：路由实例创建、基础公共静态路由（首页 / 登入注册）、全局守卫（动态路由按需装载 + 登入校验 + 标题同步）
+- `dynamic.ts`：由 `myMenuTree` 菜单树构建动态路由并 `addRoute`（顶层锚 `DefaultLayout`，叶子懒加载 `componentPath`，404 兜底最后注册）；登出 `uninstallDynamicRoutes` 清理
+- 路由组件使用懒加载 `() => import(...)`，meta 中配置标题、requiresAuth
+- 核心职责：路由表定义、未登录跳转、权限守卫、动态路由
+
+### `src/stores/` — Pinia 全局状态管理
+
+- 何时使用：多组件共享数据（用户信息/Token/主题）、跨页面持久化、复杂全局业务状态
+- 何时不用：单组件数据用 ref/reactive，父子传递用 props/emit
+- 使用 Setup 语法（组合式），命名 `useXxxStore`，持久化 store 配置 persist
+
+### `src/stores/modules/`
+
+- `user.ts`（用户信息/Token/登入登出）、`app.ts`（主题/侧边栏/语言）、`permission.ts`（权限路由/菜单）
+
+### `src/styles/` — 全局样式体系
+
+- `reset.css`：浏览器默认样式重置、`variables.css`：CSS 全局变量（主题色/间距/字号/圆角）、`common.css`：通用工具类、`transition.css`：页面过渡动画
+- 组件内用 `<style scoped>`，全局样式只放真正全局生效的内容
+- 主题色、间距通过 CSS 变量统一管理，便于换肤
+
+### `src/types/` — TypeScript 类型声明
+
+- `.d.ts` 后缀，编译后不产生 JS。`api.d.ts`（接口通用类型）、`user.d.ts`（用户类型）、`global.d.ts`（全局声明）
+- 命名：`XxxParams`（请求参数）、`XxxResult`（响应数据）、`XxxEntity`（实体），禁止大面积使用 `any`
+
+### `src/utils/` — 纯工具函数
+
+- `storage.ts`（localStorage 封装+过期时间）、`date.ts`（日期格式化）、`validate.ts`（表单校验）、`auth.ts`（Token 存取）、`download.ts`（文件下载）
+- 纯函数，不依赖 Vue 实例、不依赖业务代码，输入明确、输出可预测
+
+### `src/views/` — 业务页面
+
+按业务模块聚合，每个模块独立文件夹：
+
+```
+views/
+├── login/          # 登录模块
+├── dashboard/      # 仪表盘
+└── user/           # 用户管理
+    ├── components/ # 该模块独有的业务组件
+    ├── list.vue    # 用户列表页
+    └── detail.vue  # 用户详情页
+```
+
+- 页面组件只负责渲染和交互，复杂逻辑抽离到 composables
+- 接口调用通过 `src/api/` 层，不直接写 axios
+- 模块独有的组件放在模块内 `components/`，不放全局
+- 页面文件命名：列表页 `list.vue`，详情页 `detail.vue`，表单页 `form.vue`
 
 关键约定：
 

@@ -1,6 +1,6 @@
 // @ts-ignore
 /* eslint-disable */
-import request from '@/api/modules/request.ts'
+import request from '@/api/modules/request'
 
 /** 用户登录 账号密码登录，若开启 MFA 则返回 403 + 挑战凭证 POST /auth/login */
 export async function login(body: API.LoginDTO, options?: { [key: string]: any }) {
