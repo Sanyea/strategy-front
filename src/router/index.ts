@@ -30,6 +30,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '登入 · 注册' },
   },
   {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: () => import('@/views/error/index.vue'),
+    meta: { title: '页面未找到' },
+  },
+  {
     path: '/rbac',
     component: () => import('@/layouts/DefaultLayout.vue'),
     redirect: '/rbac/debug',
