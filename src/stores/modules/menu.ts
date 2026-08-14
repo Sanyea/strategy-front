@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { myMenuTree } from '@/api/modules/rbac/rbacQuery'
+import { hasPermission } from '@/utils/permission'
 import type { NavItem } from '@/layouts/AppSidebarNav.vue'
 
 /** 菜单 Store：myMenuTree 原始树 + 前端按权限码二次过滤 → 嵌套导航项 */
@@ -41,8 +42,8 @@ function buildNav(nodes: MenuNode[] | undefined | null, perms: string[]): NavIte
   const items: NavItem[] = []
   for (const node of nodes) {
     if (node.isVisible === 'NO') continue
-    // 前端二次过滤：节点带权限码但用户无此码 → 剪枝
-    if (node.permissionCode && !perms.includes(node.permissionCode)) continue
+    // 前端二次过滤：节点带权限码但用户无此码 → 剪枝（哨兵 * 视为全权限）
+    if (node.permissionCode && !hasPermission(perms, node.permissionCode)) continue
     const children = node.children ? buildNav(node.children, perms) : []
     if (children.length) {
       // 有子级 → 目录/分组项（可展开）；即使带 routePath 也不作叶子链接

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useUserStore } from '@/stores/modules/user'
+import { hasPermission } from '@/utils/permission'
 import RoleManage from './components/RoleManage.vue'
 import RoleGrant from './components/RoleGrant.vue'
 import UserRole from './components/UserRole.vue'
@@ -16,8 +17,8 @@ const TABS = [
   { key: 'userRole', label: '用户角色', code: 'system:user:role:manage' },
 ] as const
 
-/** 有权限码的可见标签 */
-const visibleTabs = computed(() => TABS.filter((t) => userStore.permissions.includes(t.code)))
+/** 有权限码的可见标签（哨兵 * 视为全权限） */
+const visibleTabs = computed(() => TABS.filter((t) => hasPermission(userStore.permissions, t.code)))
 
 const active = ref<string>(TABS[0].key)
 
