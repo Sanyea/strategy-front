@@ -24,10 +24,13 @@ function mapIcon(icon?: string | null): NavItem['icon'] {
 /** 菜单节点结构（PermissionVO 树，typings 中 children 为 any，此处收窄） */
 export interface MenuNode {
   permissionName?: string
+  title?: string
   routePath?: string
+  componentPath?: string
   icon?: string | null
   permissionCode?: string
   isVisible?: 'NO' | 'YES' | null
+  permissionType?: 'DIRECTORY' | 'MENU' | 'BUTTON' | 'INTERFACE'
   children?: MenuNode[] | null
 }
 

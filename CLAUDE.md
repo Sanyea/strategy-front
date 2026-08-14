@@ -16,7 +16,7 @@
   - **手动移动后必须修正跨模块导入**：生成器会写成 `../.api-gen/...`，移到 `src/api/modules/` 后须改为 `./auth/auth.ts` 等相对路径，勿依赖 gitignored 的 `.api-gen`
 - 开发代理：`vite.config.ts` 中 `/api` → `http://localhost:8080`（去掉 `/api` 前缀，后端接口位于根路径）
 
-> 注意：`DefaultLayout` 已实现：单一认证布局（侧边栏后端菜单树 + 二次权限过滤 + 面包屑 + 灵动岛），`/dashboard` 与 `/rbac/*` 共用；`BlankLayout` 尚未实现，为计划中内容。styles 体系已就位（见「水墨设计系统」）。`src/api/` 下为生成代码，勿手改业务逻辑。
+> 注意：路由已拆为「基础公共静态路由 + 动态路由」：`src/router/index.ts` 仅保留首页 `/`、登入注册 `/login`；`/dashboard` 与 `/rbac/*` 等受保护路由由路由守卫登录后拉 `myMenuTree` 经 `src/router/dynamic.ts` 动态 `addRoute`（顶层锚 `DefaultLayout`，深层目录拍平，`componentPath` 经 `import.meta.glob('/src/views/**/*.vue')` 解析）。**404 兜底必须等动态路由全部 addRoute 完成之后再注册**，否则会拦截动态路由；登出时 `uninstallDynamicRoutes` 清理旧账号路由防跨账号残留。`DefaultLayout` 单一认证布局（侧边栏后端菜单树 + 二次权限过滤 + 面包屑 + 灵动岛）；`BlankLayout` 尚未实现，为计划中内容。styles 体系已就位（见「水墨设计系统」）。`src/api/` 下为生成代码，勿手改业务逻辑。
 
 ## 水墨设计系统
 
@@ -155,9 +155,9 @@ export const UserStatusLabel: Record<UserStatus, string> = {
 
 ### `src/router/` — 路由配置
 
-- `index.ts`：路由实例创建、全局守卫（登录校验、权限判断、进度条）
-- `modules/`：按业务模块拆分的路由配置（`user.ts`、`system.ts` 等）
-- 路由组件使用懒加载 `() => import(...)`，meta 中配置标题、图标、权限角色、是否缓存
+- `index.ts`：路由实例创建、基础公共静态路由（首页 / 登入注册）、全局守卫（动态路由按需装载 + 登入校验 + 标题同步）
+- `dynamic.ts`：由 `myMenuTree` 菜单树构建动态路由并 `addRoute`（顶层锚 `DefaultLayout`，叶子懒加载 `componentPath`，404 兜底最后注册）；登出 `uninstallDynamicRoutes` 清理
+- 路由组件使用懒加载 `() => import(...)`，meta 中配置标题、requiresAuth
 - 核心职责：路由表定义、未登录跳转、权限守卫、动态路由
 
 ### `src/stores/` — Pinia 全局状态管理

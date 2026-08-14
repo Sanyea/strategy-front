@@ -6,23 +6,17 @@ import AppBreadcrumb from '@/components/business/AppBreadcrumb.vue'
 import ThemeIsland from '@/components/business/ThemeIsland.vue'
 import { useMenuStore } from '@/stores/modules/menu'
 import { useUserStore } from '@/stores/modules/user'
-import { useToast } from '@/composables/useToast'
-
-/** 单一认证布局：侧边栏按后端菜单树渲染（前端二次过滤），顶部面包屑 + 灵动岛，内容区 RouterView */
+/** 单一认证布局：侧边栏按后端菜单树渲染（前端二次过滤），顶部面包屑 + 灵动岛，内容区 RouterView。
+ *  菜单树由路由守卫在进入受保护路由前拉取并注册动态路由，本层仅做权限二次过滤生成导航项 */
 
 const menuStore = useMenuStore()
 const userStore = useUserStore()
-const toast = useToast()
 
 const navItems = computed(() => menuStore.navItems)
 
 onMounted(async () => {
-  try {
-    await Promise.all([menuStore.fetchMenuTree(), userStore.fetchPermissions()])
-    menuStore.applyPermissions(userStore.permissions)
-  } catch {
-    toast.error('菜单加载失败')
-  }
+  await userStore.fetchPermissions()
+  menuStore.applyPermissions(userStore.permissions)
 })
 </script>
 

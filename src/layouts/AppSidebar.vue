@@ -5,6 +5,7 @@ import { logout } from '@/api/modules/auth/auth'
 import { clearToken } from '@/api/modules/request'
 import { useUserStore } from '@/stores/modules/user'
 import { useMenuStore } from '@/stores/modules/menu'
+import { uninstallDynamicRoutes } from '@/router/dynamic'
 import AppSidebarNav, { ICONS, type NavItem } from './AppSidebarNav.vue'
 
 /** 侧边栏：品牌 + 递归导航（AppSidebarNav）+ 底部登出；桌面滚动收缩，移动端抽屉 */
@@ -26,6 +27,7 @@ async function handleLogout(): Promise<void> {
   } finally {
     userStore.clear()
     menuStore.$reset()
+    uninstallDynamicRoutes(router) // 卸旧账号动态路由，防跨账号残留
     clearToken()
     void router.replace('/')
   }
