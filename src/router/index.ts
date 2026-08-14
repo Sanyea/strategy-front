@@ -76,7 +76,7 @@ router.beforeEach((to) => {
   }
   if (to.name === 'auth' && authed) {
     const redirect = typeof to.query.redirect === 'string' ? to.query.redirect : ''
-    return redirect.startsWith('/') ? redirect : '/dashboard'
+    return redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/dashboard'
   }
 })
 
