@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 import { myMenuTree } from '@/api/modules/rbac/rbacQuery'
-import type { NavItem } from '@/layouts/AppSidebar.vue'
+import type { NavItem } from '@/layouts/AppSidebarNav.vue'
 
-/** 菜单 Store：后端 myMenuTree → 侧边栏导航项（扁平列表）+ 原始树（面包屑层级） */
+/** 菜单 Store：myMenuTree 原始树 + 前端按权限码二次过滤 → 嵌套导航项 */
 
-/** 后端 icon 标识 → AppSidebar 图标 key 映射；未知回落 menu */
+/** 后端 icon 标识 → 侧边栏图标 key 映射；未知回落 menu */
 const ICON_MAP: Record<string, NavItem['icon']> = {
   dashboard: 'dashboard',
   home: 'home',
@@ -15,46 +15,48 @@ const ICON_MAP: Record<string, NavItem['icon']> = {
   menu: 'menu',
 }
 
-/**
- * 后端图标标识映射为侧边栏图标 key
- * @param icon 后端图标字符串
- * @returns AppSidebar 图标 key（未知回落 menu）
- */
+/** 后端图标标识映射为侧边栏图标 key（未知回落 menu） */
 function mapIcon(icon?: string | null): NavItem['icon'] {
   return (icon && ICON_MAP[icon]) || 'menu'
 }
 
-/** 菜单节点结构（PermissionVO 树，typings 中 children 为 any，此处收窄；导出供面包屑复用） */
+/** 菜单节点结构（PermissionVO 树，typings 中 children 为 any，此处收窄） */
 export interface MenuNode {
   permissionName?: string
   routePath?: string
   icon?: string | null
+  permissionCode?: string
   isVisible?: 'NO' | 'YES' | null
   children?: MenuNode[] | null
 }
 
-/** 拍平树：取可见且有 routePath 的节点，生成扁平导航项；排除首页根路径（回首页仅走登出） */
-function flattenMenu(nodes: MenuNode[] | undefined | null): NavItem[] {
+/**
+ * 由菜单树构建嵌套导航项（二次过滤）
+ * @param nodes 原始菜单树
+ * @param perms 当前用户权限码集合
+ * @returns 嵌套 NavItem[]
+ */
+function buildNav(nodes: MenuNode[] | undefined | null, perms: string[]): NavItem[] {
   if (!nodes) return []
   const items: NavItem[] = []
-  const walk = (list: MenuNode[]): void => {
-    for (const node of list) {
-      if (node.routePath && node.routePath !== '/' && node.isVisible !== 'NO') {
-        items.push({
-          label: node.permissionName || '未命名',
-          icon: mapIcon(node.icon),
-          to: node.routePath,
-        })
-      }
-      if (node.children) walk(node.children)
+  for (const node of nodes) {
+    if (node.isVisible === 'NO') continue
+    // 前端二次过滤：节点带权限码但用户无此码 → 剪枝
+    if (node.permissionCode && !perms.includes(node.permissionCode)) continue
+    const children = node.children ? buildNav(node.children, perms) : []
+    if (children.length) {
+      // 有子级 → 目录/分组项（可展开）；即使带 routePath 也不作叶子链接
+      items.push({ label: node.permissionName || '未命名', icon: mapIcon(node.icon), children })
+    } else if (node.routePath && node.routePath !== '/') {
+      // 叶子 → 链接项（首页根不纳入，回首页仅走登出）
+      items.push({ label: node.permissionName || '未命名', icon: mapIcon(node.icon), to: node.routePath })
     }
   }
-  walk(nodes)
   return items
 }
 
 interface MenuState {
-  /** 后端原始菜单树（拍平前的层级结构，供面包屑构建层级链） */
+  /** 后端原始菜单树（面包屑层级链也消费此树） */
   tree: MenuNode[] | null
   navItems: NavItem[]
   isLoaded: boolean
@@ -68,15 +70,13 @@ export const useMenuStore = defineStore('menu', {
   }),
   actions: {
     /**
-     * 拉取当前用户菜单树：保留原始树供面包屑层级，并拍平为侧边栏导航项
-     * 成功才置已加载标记；失败时置空导航并抛出，由调用方 toast 提示，下次可重试
+     * 拉取当前用户菜单树（原始结构，未过滤）
+     * 成功置已加载标记；失败置空并抛出，由调用方 toast 提示，下次可重试
      */
     async fetchMenuTree(): Promise<void> {
       try {
         const res = await myMenuTree()
-        const tree = res.data as MenuNode[] | undefined
-        this.tree = tree ?? []
-        this.navItems = flattenMenu(tree)
+        this.tree = (res.data as MenuNode[] | undefined) ?? []
         this.isLoaded = true
       } catch (err) {
         this.tree = null
@@ -84,6 +84,14 @@ export const useMenuStore = defineStore('menu', {
         this.isLoaded = false
         throw err
       }
+    },
+    /**
+     * 二次过滤：按当前用户权限码从树构建导航项
+     * 由布局在 fetchMenuTree 与 fetchPermissions 都成功后调用
+     * @param perms 当前用户权限码集合
+     */
+    applyPermissions(perms: string[]): void {
+      this.navItems = buildNav(this.tree, perms)
     },
   },
 })
