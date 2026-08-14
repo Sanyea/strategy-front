@@ -4,11 +4,13 @@ import { useRouter } from 'vue-router'
 import { logout } from '@/api/modules/auth/auth'
 import { clearToken } from '@/api/modules/request'
 import { useUserStore } from '@/stores/modules/user'
+import { useMenuStore } from '@/stores/modules/menu'
 
 /** 个人仪表盘：欢迎横幅 + 数据统计看板（静态占位）+ 最近动态 / 待办占位 */
 
 const router = useRouter()
 const userStore = useUserStore()
+const menuStore = useMenuStore()
 
 const nickname = computed(() => userStore.user?.nickname ?? '朋友')
 const username = computed(() => userStore.user?.username ?? '')
@@ -47,6 +49,7 @@ async function handleLogout(): Promise<void> {
     // 本地退出优先：接口失败也继续清理
   } finally {
     userStore.clear()
+    menuStore.$reset()
     clearToken()
     void router.replace('/login')
   }

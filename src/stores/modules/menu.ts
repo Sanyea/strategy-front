@@ -29,7 +29,7 @@ interface MenuNode {
   permissionName?: string
   routePath?: string
   icon?: string | null
-  isVisible?: 'NO' | 'YES' | string | null
+  isVisible?: 'NO' | 'YES' | null
   children?: MenuNode[] | null
 }
 
@@ -55,28 +55,28 @@ function flattenMenu(nodes: MenuNode[] | undefined | null): NavItem[] {
 
 interface MenuState {
   navItems: NavItem[]
-  loaded: boolean
+  isLoaded: boolean
 }
 
 export const useMenuStore = defineStore('menu', {
   state: (): MenuState => ({
     navItems: [],
-    loaded: false,
+    isLoaded: false,
   }),
   actions: {
     /**
      * 拉取当前用户菜单树并拍平为导航项
-     * 失败时置空导航并抛出，由调用方 toast 提示
+     * 成功才置已加载标记；失败时置空导航并抛出，由调用方 toast 提示，下次可重试
      */
     async fetchMenuTree(): Promise<void> {
       try {
         const res = await myMenuTree()
         this.navItems = flattenMenu(res.data as MenuNode[] | undefined)
+        this.isLoaded = true
       } catch (err) {
         this.navItems = []
+        this.isLoaded = false
         throw err
-      } finally {
-        this.loaded = true
       }
     },
   },

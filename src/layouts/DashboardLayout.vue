@@ -16,7 +16,7 @@ const navItems = computed(() => menuStore.navItems)
 const title = computed(() => (route.meta?.title as string | undefined) ?? '')
 
 onMounted(async () => {
-  if (menuStore.loaded) return
+  if (menuStore.isLoaded) return
   try {
     await menuStore.fetchMenuTree()
   } catch {
