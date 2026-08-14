@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import ThemeIsland from '@/components/business/ThemeIsland.vue'
 import AuthModeSwitch from './components/AuthModeSwitch.vue'
 import LoginCard from './components/LoginCard.vue'
@@ -9,13 +9,15 @@ import RegisterCard from './components/RegisterCard.vue'
 /** 登入 / 注册页：单卡片展示一张表单，顶部开关 + 卡片内事件链切换模式 */
 
 const router = useRouter()
+const route = useRoute()
 
 const mode = ref<'login' | 'register'>('login')
 const prefillAccount = ref('')
 
-/** 登入成功（含注册后自动登入）：回到工作台 */
+/** 登入成功（含注册后自动登入）：回到工作台（支持 ?redirect= 回跳） */
 function handleAuthSuccess(): void {
-  void router.replace('/')
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+  void router.replace(redirect && redirect.startsWith('/') ? redirect : '/dashboard')
 }
 
 /** 切换至注册 */

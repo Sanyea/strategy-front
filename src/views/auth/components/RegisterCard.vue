@@ -2,9 +2,12 @@
 import { reactive, ref } from 'vue'
 import { register } from '@/api/modules/auth/auth'
 import { setToken } from '@/api/modules/request'
+import { useUserStore } from '@/stores/modules/user'
 import { buildDeviceInfo, detectChannel } from '@/utils/device'
 import { readApiErrorMessage } from '@/utils/error'
 import AuthMethodSelect from './AuthMethodSelect.vue'
+
+const userStore = useUserStore()
 
 /** 注册卡片：第一步选方式，再分步填表（账号 → 资料 → 完成），一屏只做一件事 */
 
@@ -156,6 +159,12 @@ async function submitRegister(): Promise<void> {
     })
     // 后端注册即返回双 Token，注册成功自动登入
     if (res.data) setToken(res.data)
+    userStore.setUser({
+      username: form.username.trim(),
+      nickname: form.nickname.trim() || form.username.trim(),
+      phone: form.phone.trim() || undefined,
+      email: form.email.trim() || undefined,
+    })
     step.value = 3
   } catch (err) {
     formError.value = readApiErrorMessage(err, '注册失败，请稍后再试')

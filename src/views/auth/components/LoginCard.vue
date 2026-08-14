@@ -3,9 +3,12 @@ import { computed, ref, watch } from 'vue'
 import { isAxiosError } from 'axios'
 import { login, verifyMfa } from '@/api/modules/auth/auth'
 import { setToken } from '@/api/modules/request'
+import { useUserStore } from '@/stores/modules/user'
 import { buildDeviceInfo, detectChannel } from '@/utils/device'
 import { readApiErrorMessage } from '@/utils/error'
 import AuthMethodSelect from './AuthMethodSelect.vue'
+
+const userStore = useUserStore()
 
 /** 登入卡片：第一步选方式，选中后填表；命中 MFA 时原地切换二次验证（一屏一事） */
 
@@ -75,6 +78,7 @@ async function submitLogin(): Promise<void> {
       deviceInfo: buildDeviceInfo(),
     })
     if (res.data) setToken(res.data)
+    userStore.setUser({ username: account.value.trim(), nickname: account.value.trim() })
     emit('success')
   } catch (err) {
     // 后端约定：开启 MFA 时登录返回 403 + 挑战凭证
@@ -108,6 +112,7 @@ async function submitMfa(): Promise<void> {
       deviceInfo: buildDeviceInfo(),
     })
     if (res.data) setToken(res.data)
+    userStore.setUser({ username: account.value.trim(), nickname: account.value.trim() })
     emit('success')
   } catch (err) {
     errorMsg.value = readApiErrorMessage(err, '验证失败，请重新输入')
