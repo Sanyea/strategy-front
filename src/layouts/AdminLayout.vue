@@ -2,9 +2,10 @@
 import AppSidebar from '@/layouts/AppSidebar.vue'
 import BaseToastHost from '@/components/base/BaseToastHost.vue'
 import AppBreadcrumb from '@/components/business/AppBreadcrumb.vue'
+import ThemeIsland from '@/components/business/ThemeIsland.vue'
 import type { NavItem } from '@/layouts/AppSidebar.vue'
 
-/** 管理后台布局：左侧导航（AppSidebar）+ 右侧内容区，顶部面包屑显示路由层级 */
+/** 管理后台布局：左侧导航（AppSidebar）+ 右侧内容区，顶部面包屑显示路由层级，主题灵动岛悬浮吸顶 */
 
 const navItems: NavItem[] = [
   { label: '角色管理', icon: 'role', to: '/rbac/roles' },
@@ -16,6 +17,7 @@ const navItems: NavItem[] = [
 
 <template>
   <div class="admin">
+    <ThemeIsland />
     <AppSidebar :items="navItems" />
 
     <div class="admin__main">

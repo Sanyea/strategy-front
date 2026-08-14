@@ -1,16 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { logout } from '@/api/modules/auth/auth'
-import { clearToken } from '@/api/modules/request'
 import { useUserStore } from '@/stores/modules/user'
-import { useMenuStore } from '@/stores/modules/menu'
 
 /** 个人仪表盘：欢迎横幅 + 数据统计看板（静态占位）+ 最近动态 / 待办占位 */
 
-const router = useRouter()
 const userStore = useUserStore()
-const menuStore = useMenuStore()
 
 const nickname = computed(() => userStore.user?.nickname ?? '朋友')
 const username = computed(() => userStore.user?.username ?? '')
@@ -42,19 +36,6 @@ const todos = [
   { text: '阅读权限变更说明', done: true },
 ]
 
-async function handleLogout(): Promise<void> {
-  try {
-    await logout()
-  } catch {
-    // 本地退出优先：接口失败也继续清理
-  } finally {
-    userStore.clear()
-    menuStore.$reset()
-    clearToken()
-    void router.replace('/')
-  }
-}
-
 onMounted(() => {
   void userStore.fetchPermissions()
 })
@@ -75,9 +56,6 @@ onMounted(() => {
           <span>{{ today }}</span>
         </p>
       </div>
-      <button type="button" class="btn btn--ghost dash__logout" @click="handleLogout">
-        登出
-      </button>
     </section>
 
     <!-- 数据统计看板（静态占位） -->
@@ -181,10 +159,6 @@ onMounted(() => {
 .dash__dot {
   margin-inline: var(--space-2);
   opacity: 0.6;
-}
-
-.dash__logout {
-  flex-shrink: 0;
 }
 
 /* 统计卡片 */
@@ -324,10 +298,6 @@ onMounted(() => {
 
   .dash__hero {
     flex-wrap: wrap;
-  }
-
-  .dash__logout {
-    width: 100%;
   }
 }
 </style>

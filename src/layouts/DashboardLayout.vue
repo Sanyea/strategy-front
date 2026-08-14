@@ -3,10 +3,11 @@ import { computed, onMounted } from 'vue'
 import AppSidebar from '@/layouts/AppSidebar.vue'
 import BaseToastHost from '@/components/base/BaseToastHost.vue'
 import AppBreadcrumb from '@/components/business/AppBreadcrumb.vue'
+import ThemeIsland from '@/components/business/ThemeIsland.vue'
 import { useMenuStore } from '@/stores/modules/menu'
 import { useToast } from '@/composables/useToast'
 
-/** 个人仪表盘布局：侧边栏菜单按后端 myMenuTree 动态渲染，顶部面包屑显示路由层级 */
+/** 个人仪表盘布局：侧边栏菜单按后端 myMenuTree 动态渲染，顶部面包屑显示路由层级，主题灵动岛悬浮吸顶 */
 
 const menuStore = useMenuStore()
 const toast = useToast()
@@ -25,6 +26,7 @@ onMounted(async () => {
 
 <template>
   <div class="dashboard">
+    <ThemeIsland />
     <AppSidebar :items="navItems" />
 
     <div class="dashboard__main">

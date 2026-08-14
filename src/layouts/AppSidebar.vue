@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { logout } from '@/api/modules/auth/auth'
+import { clearToken } from '@/api/modules/request'
+import { useUserStore } from '@/stores/modules/user'
+import { useMenuStore } from '@/stores/modules/menu'
 
 /** 图标集合（inline SVG path，随 stroke 当前色） */
 const ICONS = {
@@ -32,6 +36,23 @@ withDefaults(defineProps<{ items: NavItem[]; brand?: string }>(), {
 })
 
 const route = useRoute()
+const router = useRouter()
+const userStore = useUserStore()
+const menuStore = useMenuStore()
+
+/** 登出：登出接口失败也继续本地清理，返回公开首页 */
+async function handleLogout(): Promise<void> {
+  try {
+    await logout()
+  } catch {
+    // 本地退出优先：接口失败也继续清理
+  } finally {
+    userStore.clear()
+    menuStore.$reset()
+    clearToken()
+    void router.replace('/')
+  }
+}
 
 /** 路由项是否命中当前路径（精确或子路径前缀） */
 function isActive(to: string): boolean {
@@ -137,7 +158,7 @@ onBeforeUnmount(() => {
     </nav>
 
     <div class="sidebar__footer">
-      <button type="button" class="sidebar__cta">
+      <button type="button" class="sidebar__cta" @click="handleLogout">
         <svg
           class="sidebar__icon"
           viewBox="0 0 24 24"
@@ -148,9 +169,9 @@ onBeforeUnmount(() => {
           stroke-linejoin="round"
           aria-hidden="true"
         >
-          <path :d="ICONS.login" />
+          <path :d="ICONS.logout" />
         </svg>
-        <span v-show="!collapsed" class="sidebar__label">免费开始</span>
+        <span v-show="!collapsed" class="sidebar__label">登出</span>
       </button>
     </div>
   </aside>
@@ -230,8 +251,8 @@ onBeforeUnmount(() => {
         </template>
       </nav>
       <div class="sidebar-mobile__foot">
-        <button type="button" class="btn btn--primary" @click="drawerOpen = false">
-          免费开始
+        <button type="button" class="btn btn--primary" @click="handleLogout">
+          登出
         </button>
       </div>
     </aside>
