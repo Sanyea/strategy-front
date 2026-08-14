@@ -33,13 +33,13 @@ interface MenuNode {
   children?: MenuNode[] | null
 }
 
-/** 拍平树：取可见且有 routePath 的节点，生成扁平导航项 */
+/** 拍平树：取可见且有 routePath 的节点，生成扁平导航项；排除首页根路径（回首页仅走登出） */
 function flattenMenu(nodes: MenuNode[] | undefined | null): NavItem[] {
   if (!nodes) return []
   const items: NavItem[] = []
   const walk = (list: MenuNode[]): void => {
     for (const node of list) {
-      if (node.routePath && node.isVisible !== 'NO') {
+      if (node.routePath && node.routePath !== '/' && node.isVisible !== 'NO') {
         items.push({
           label: node.permissionName || '未命名',
           icon: mapIcon(node.icon),

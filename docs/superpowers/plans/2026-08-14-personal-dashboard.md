@@ -972,4 +972,6 @@ Expected: 调 `/auth/logout`，清凭证与用户 store，回 `/login`；再访�
 2. **菜单跨账号残留（最终审查 Important）**：`useMenuStore` 字段 `loaded` 更名 `isLoaded`；`fetchMenuTree` 仅在成功后置 `isLoaded = true`，失败置 `false` 并重抛（下次挂载可重试）；登出时 `handleLogout` 调 `menuStore.$reset()` 防上一账号菜单泄漏。
 3. **导航重复 key（最终审查 Important）**：`AppSidebar.vue` 两处导航循环 `:key="item.label"` 改 `:key="item.to ?? item.label"`，防后端同名菜单冲突。
 4. **`MenuNode.isVisible` 联合收紧**：`'NO' | 'YES' | string | null` → `'NO' | 'YES' | null`。
-5. 延后项（Minor，未在本计划内处理）：logout 图标 path 与 login 相同（计划强制，当前未被消费）；登出无防重复点击；`getStoredUser` 不验 shape；空 `<h1>` 兜底；type-only import 排序。建议：后续加 404 catch-all 路由与全局 401 处理（后端菜单可能指向未注册前端路由）。
+5. 延后项（Minor，未在本计划内处理）：logout 图标 path 与 login 相同（计划强制，当前未被消费）；登出无防重复点击；`getStoredUser` 不验 shape；type-only import 排序。建议：后续加 404 catch-all 路由与全局 401 处理（后端菜单可能指向未注册前端路由）。
+6. **登出回首页**（人工确认）：登出目标从 `/login` 改 `/`（公开首页），侧边栏不留首页入口。
+7. **顶部面包屑 + 移除返回首页**（人工确认）：新 `AppBreadcrumb`（business/）替换两布局头部标题，显示路由层级（不含首页根，回首页仅走登出）；`AdminLayout` 静态 navItems 移除「返回首页」；`menu.ts` `flattenMenu` 排除 `routePath === '/'` 节点。

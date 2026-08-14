@@ -1,23 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
 import AppSidebar from '@/layouts/AppSidebar.vue'
 import BaseToastHost from '@/components/base/BaseToastHost.vue'
+import AppBreadcrumb from '@/components/business/AppBreadcrumb.vue'
 import type { NavItem } from '@/layouts/AppSidebar.vue'
 
-/** 管理后台布局：左侧导航（AppSidebar）+ 右侧内容区，页面标题取自路由 meta */
-
-const route = useRoute()
+/** 管理后台布局：左侧导航（AppSidebar）+ 右侧内容区，顶部面包屑显示路由层级 */
 
 const navItems: NavItem[] = [
-  { label: '返回首页', icon: 'home', to: '/' },
   { label: '角色管理', icon: 'role', to: '/rbac/roles' },
   { label: '权限管理', icon: 'permission', to: '/rbac/permissions' },
   { label: '角色授权', icon: 'grant', to: '/rbac/role-permissions' },
   { label: '用户角色', icon: 'userrole', to: '/rbac/user-roles' },
 ]
-
-const title = computed(() => (route.meta?.title as string | undefined) ?? '')
 </script>
 
 <template>
@@ -26,7 +20,7 @@ const title = computed(() => (route.meta?.title as string | undefined) ?? '')
 
     <div class="admin__main">
       <header class="admin__head">
-        <h1 class="admin__title">{{ title }}</h1>
+        <AppBreadcrumb />
       </header>
       <main class="admin__content">
         <RouterView />
@@ -59,12 +53,6 @@ const title = computed(() => (route.meta?.title as string | undefined) ?? '')
   background-color: color-mix(in srgb, var(--color-bg) 72%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-}
-
-.admin__title {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  letter-spacing: 0.08em;
 }
 
 .admin__content {
