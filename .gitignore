@@ -12,9 +12,6 @@ dist
 dist-ssr
 *.local
 
-# @umijs/openapi 生成产物临时目录（手动移动后即弃用）
-.api-gen
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -25,8 +22,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-/public/washpaintingstyle/16-9/scenery/
-/public/washpaintingstyle/16-9/city/
-/public/washpaintingstyle/
-/public/washpaintingstyle/16-9/animal/
-/public/washpaintingstyle/16-9/
+/.superpowers/
+/.api-gen/
