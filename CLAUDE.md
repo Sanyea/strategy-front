@@ -8,11 +8,15 @@
 
 已就位的接口工具链（后端 Spring Boot + SpringDoc OpenAPI）：
 
-- `@umijs/openapi` 代码生成：`npm run api:gen` 从 `http://localhost:8080/v3/api-docs` 生成 TS 接口代码到根目录临时目录 `.api-gen/`（已 gitignore），再手动移动到 `src/api/modules/<模块>/`。当前后端仅暴露认证接口（register/login/mfa/refresh/logout，JWT 双 Token + 设备绑定），业务接口待后端补充
-- `src/api/modules/request.ts` — axios 请求封装：baseURL 读 `VITE_API_BASE_URL`、Bearer 注入、业务码校验（信封 `code === 200` 成功，HTTP 200 但 code 非 200 抛 `ApiError`）、401 静默刷新重试、设备 ID 持久化
+- `@umijs/openapi` 代码生成：`npm run api:gen` 从 `http://localhost:8080/v3/api-docs` 生成 TS 接口代码到根目录临时目录 `.api-gen/`（已 gitignore），再手动移动到 `src/api/modules/<模块>/`。当前后端暴露两大模块：**auth**（register/login/mfa/refresh/logout，JWT 双 Token + 设备绑定）与 **rbac**（角色/权限/用户角色/角色权限/查询，见下方说明）
+- `src/api/modules/` 结构（生成代码，勿手改业务逻辑）：
+  - `request.ts` — axios 请求封装：baseURL 读 `VITE_API_BASE_URL`、Bearer 注入、业务码校验（信封 `code === 200` 成功，HTTP 200 但 code 非 200 抛 `ApiError`）、401 静默刷新重试、设备 ID 持久化
+  - `typings.d.ts` — 全模块共享 `namespace API` 类型声明（auth + rbac 合并，模块级共用，勿拆回各模块）
+  - `auth/`、`rbac/` — 按模块接口文件；`index.ts` 为聚合 barrel（默认导出 `{ auth, rbacRole, rbacPermission, ... }`）
+  - **手动移动后必须修正跨模块导入**：生成器会写成 `../.api-gen/...`，移到 `src/api/modules/` 后须改为 `./auth/auth.ts` 等相对路径，勿依赖 gitignored 的 `.api-gen`
 - 开发代理：`vite.config.ts` 中 `/api` → `http://localhost:8080`（去掉 `/api` 前缀，后端接口位于根路径）
 
-> 注意：`DefaultLayout`/`BlankLayout` 尚未实现，为计划中内容；styles 体系已就位（见「水墨设计系统」）。`src/api/` 下为生成代码，勿手改。
+> 注意：`DefaultLayout`/`BlankLayout` 尚未实现，为计划中内容；styles 体系已就位（见「水墨设计系统」）。`src/api/` 下为生成代码，勿手改业务逻辑。
 
 ## 水墨设计系统
 
