@@ -12,7 +12,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/dashboard',
-    component: () => import('@/layouts/DashboardLayout.vue'),
+    component: () => import('@/layouts/DefaultLayout.vue'),
     meta: { title: '个人仪表盘', requiresAuth: true },
     children: [
       {
@@ -31,7 +31,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/rbac',
-    component: () => import('@/layouts/AdminLayout.vue'),
+    component: () => import('@/layouts/DefaultLayout.vue'),
     redirect: '/rbac/roles',
     meta: { title: '权限管理' },
     children: [

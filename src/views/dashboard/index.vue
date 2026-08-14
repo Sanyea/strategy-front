@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useUserStore } from '@/stores/modules/user'
 
 /** 个人仪表盘：欢迎横幅 + 数据统计看板（静态占位）+ 最近动态 / 待办占位 */
@@ -36,9 +36,6 @@ const todos = [
   { text: '阅读权限变更说明', done: true },
 ]
 
-onMounted(() => {
-  void userStore.fetchPermissions()
-})
 </script>
 
 <template>

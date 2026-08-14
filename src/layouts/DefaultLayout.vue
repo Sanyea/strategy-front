@@ -1,30 +1,41 @@
 <script setup lang="ts">
+import { computed, onMounted } from 'vue'
 import AppSidebar from '@/layouts/AppSidebar.vue'
 import BaseToastHost from '@/components/base/BaseToastHost.vue'
 import AppBreadcrumb from '@/components/business/AppBreadcrumb.vue'
 import ThemeIsland from '@/components/business/ThemeIsland.vue'
-import type { NavItem } from '@/layouts/AppSidebar.vue'
+import { useMenuStore } from '@/stores/modules/menu'
+import { useUserStore } from '@/stores/modules/user'
+import { useToast } from '@/composables/useToast'
 
-/** 管理后台布局：左侧导航（AppSidebar）+ 右侧内容区，顶部面包屑显示路由层级，主题灵动岛悬浮吸顶 */
+/** 单一认证布局：侧边栏按后端菜单树渲染（前端二次过滤），顶部面包屑 + 灵动岛，内容区 RouterView */
 
-const navItems: NavItem[] = [
-  { label: '角色管理', icon: 'role', to: '/rbac/roles' },
-  { label: '权限管理', icon: 'permission', to: '/rbac/permissions' },
-  { label: '角色授权', icon: 'grant', to: '/rbac/role-permissions' },
-  { label: '用户角色', icon: 'userrole', to: '/rbac/user-roles' },
-]
+const menuStore = useMenuStore()
+const userStore = useUserStore()
+const toast = useToast()
+
+const navItems = computed(() => menuStore.navItems)
+
+onMounted(async () => {
+  try {
+    await Promise.all([menuStore.fetchMenuTree(), userStore.fetchPermissions()])
+    menuStore.applyPermissions(userStore.permissions)
+  } catch {
+    toast.error('菜单加载失败')
+  }
+})
 </script>
 
 <template>
-  <div class="admin">
+  <div class="layout">
     <ThemeIsland />
     <AppSidebar :items="navItems" />
 
-    <div class="admin__main">
-      <header class="admin__head">
+    <div class="layout__main">
+      <header class="layout__head">
         <AppBreadcrumb />
       </header>
-      <main class="admin__content">
+      <main class="layout__content">
         <RouterView />
       </main>
     </div>
@@ -34,19 +45,19 @@ const navItems: NavItem[] = [
 </template>
 
 <style scoped>
-.admin {
+.layout {
   display: flex;
   min-height: 100vh;
 }
 
-.admin__main {
+.layout__main {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
-.admin__head {
+.layout__head {
   position: sticky;
   top: 0;
   z-index: 40;
@@ -57,17 +68,17 @@ const navItems: NavItem[] = [
   -webkit-backdrop-filter: blur(12px);
 }
 
-.admin__content {
+.layout__content {
   flex: 1;
   padding: var(--space-6);
 }
 
 @media (max-width: 768px) {
-  .admin__content {
+  .layout__content {
     padding: var(--space-4);
   }
 
-  .admin__head {
+  .layout__head {
     padding-left: var(--space-4);
   }
 }
