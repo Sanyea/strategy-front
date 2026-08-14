@@ -91,7 +91,7 @@ onBeforeUnmount(() => {
 
     <!-- 导航项：配置 to 渲染为 router-link 并高亮，否则为占位按钮 -->
     <nav class="sidebar__nav">
-      <template v-for="item in items" :key="item.label">
+      <template v-for="item in items" :key="item.to ?? item.label">
         <RouterLink
           v-if="item.to"
           :to="item.to"
@@ -185,7 +185,7 @@ onBeforeUnmount(() => {
         </button>
       </div>
       <nav class="sidebar__nav">
-        <template v-for="item in items" :key="item.label">
+        <template v-for="item in items" :key="item.to ?? item.label">
           <RouterLink
             v-if="item.to"
             :to="item.to"
