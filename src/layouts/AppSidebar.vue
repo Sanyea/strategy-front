@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 /** 图标集合（inline SVG path，随 stroke 当前色） */
 const ICONS = {
@@ -10,16 +11,30 @@ const ICONS = {
   login: 'M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3',
   close: 'M6 6l12 12M18 6L6 18',
   menu: 'M4 7h16M4 12h16M4 17h16',
+  home: 'M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  role: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0M4 21c0-3.3 3.6-6 8-6s8 2.7 8 6',
+  permission: 'M12 3l7 3v5c0 4.4-3 7.4-7 9-4-1.6-7-4.6-7-9V6z',
+  userrole: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20c0-3.3 3.6-6 8-6s8 2.7 8 6',
+  grant: 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
 } as const
 
 export interface NavItem {
   label: string
   icon: keyof typeof ICONS
+  /** 配置后渲染为 router-link，并据此高亮当前项 */
+  to?: string
 }
 
 withDefaults(defineProps<{ items: NavItem[]; brand?: string }>(), {
   brand: '云岫',
 })
+
+const route = useRoute()
+
+/** 路由项是否命中当前路径（精确或子路径前缀） */
+function isActive(to: string): boolean {
+  return route.path === to || route.path.startsWith(`${to}/`)
+}
 
 const MOBILE_BP = '(max-width: 768px)'
 const SCROLL_THRESHOLD = 80
@@ -72,29 +87,51 @@ onBeforeUnmount(() => {
       <span v-show="!collapsed" class="sidebar__brand-name">{{ brand }}</span>
     </div>
 
-    <!-- 导航项为占位按钮，路由接入后替换为 router-link -->
+    <!-- 导航项：配置 to 渲染为 router-link 并高亮，否则为占位按钮 -->
     <nav class="sidebar__nav">
-      <button
-        v-for="item in items"
-        :key="item.label"
-        type="button"
-        class="sidebar__item"
-        :title="collapsed ? item.label : undefined"
-      >
-        <svg
-          class="sidebar__icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
+      <template v-for="item in items" :key="item.label">
+        <RouterLink
+          v-if="item.to"
+          :to="item.to"
+          class="sidebar__item"
+          :class="{ 'is-active': isActive(item.to) }"
+          :title="collapsed ? item.label : undefined"
         >
-          <path :d="ICONS[item.icon]" />
-        </svg>
-        <span v-show="!collapsed" class="sidebar__label">{{ item.label }}</span>
-      </button>
+          <svg
+            class="sidebar__icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path :d="ICONS[item.icon]" />
+          </svg>
+          <span v-show="!collapsed" class="sidebar__label">{{ item.label }}</span>
+        </RouterLink>
+        <button
+          v-else
+          type="button"
+          class="sidebar__item"
+          :title="collapsed ? item.label : undefined"
+        >
+          <svg
+            class="sidebar__icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path :d="ICONS[item.icon]" />
+          </svg>
+          <span v-show="!collapsed" class="sidebar__label">{{ item.label }}</span>
+        </button>
+      </template>
     </nav>
 
     <div class="sidebar__footer">
@@ -146,27 +183,49 @@ onBeforeUnmount(() => {
         </button>
       </div>
       <nav class="sidebar__nav">
-        <button
-          v-for="item in items"
-          :key="item.label"
-          type="button"
-          class="sidebar__item"
-          @click="drawerOpen = false"
-        >
-          <svg
-            class="sidebar__icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
+        <template v-for="item in items" :key="item.label">
+          <RouterLink
+            v-if="item.to"
+            :to="item.to"
+            class="sidebar__item"
+            :class="{ 'is-active': isActive(item.to) }"
+            @click="drawerOpen = false"
           >
-            <path :d="ICONS[item.icon]" />
-          </svg>
-          <span class="sidebar__label">{{ item.label }}</span>
-        </button>
+            <svg
+              class="sidebar__icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path :d="ICONS[item.icon]" />
+            </svg>
+            <span class="sidebar__label">{{ item.label }}</span>
+          </RouterLink>
+          <button
+            v-else
+            type="button"
+            class="sidebar__item"
+            @click="drawerOpen = false"
+          >
+            <svg
+              class="sidebar__icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path :d="ICONS[item.icon]" />
+            </svg>
+            <span class="sidebar__label">{{ item.label }}</span>
+          </button>
+        </template>
       </nav>
       <div class="sidebar-mobile__foot">
         <button type="button" class="btn btn--primary" @click="drawerOpen = false">

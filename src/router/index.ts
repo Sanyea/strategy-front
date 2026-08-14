@@ -15,6 +15,38 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/auth/index.vue'),
     meta: { title: '登入 · 注册' },
   },
+  {
+    path: '/rbac',
+    component: () => import('@/layouts/AdminLayout.vue'),
+    redirect: '/rbac/roles',
+    meta: { title: '权限管理' },
+    children: [
+      {
+        path: 'roles',
+        name: 'rbac-roles',
+        component: () => import('@/views/rbac/roles/index.vue'),
+        meta: { title: '角色管理' },
+      },
+      {
+        path: 'permissions',
+        name: 'rbac-permissions',
+        component: () => import('@/views/rbac/permissions/index.vue'),
+        meta: { title: '权限管理' },
+      },
+      {
+        path: 'role-permissions',
+        name: 'rbac-role-permissions',
+        component: () => import('@/views/rbac/role-permissions/index.vue'),
+        meta: { title: '角色授权' },
+      },
+      {
+        path: 'user-roles',
+        name: 'rbac-user-roles',
+        component: () => import('@/views/rbac/user-roles/index.vue'),
+        meta: { title: '用户角色' },
+      },
+    ],
+  },
 ]
 
 const router = createRouter({
