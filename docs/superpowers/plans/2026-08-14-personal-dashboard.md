@@ -467,8 +467,9 @@ async function handleLogout(): Promise<void> {
     // 本地退出优先：接口失败也继续清理
   } finally {
     userStore.clear()
+    menuStore.$reset()
     clearToken()
-    void router.replace('/login')
+    void router.replace('/')
   }
 }
 

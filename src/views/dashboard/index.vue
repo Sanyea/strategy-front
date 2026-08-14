@@ -51,7 +51,7 @@ async function handleLogout(): Promise<void> {
     userStore.clear()
     menuStore.$reset()
     clearToken()
-    void router.replace('/login')
+    void router.replace('/')
   }
 }
 

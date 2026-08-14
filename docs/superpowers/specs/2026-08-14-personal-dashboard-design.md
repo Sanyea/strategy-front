@@ -124,7 +124,7 @@ key 统一 `strategy-front-user`。仅 user store 消费。
 
 - `myMenuTree` 拉取失败：菜单树为空，toast 提示「菜单加载失败」；不影响页面主体
 - `myPermissions` 拉取失败：`permissions` 留空，静默（仅 warn），不阻塞页面
-- 登出 API 失败：仍清本地凭证并跳 `/login`（本地退出优先）
+- 登出 API 失败：仍清本地凭证并回首页 `/`（本地退出优先）
 
 ## 验证
 
