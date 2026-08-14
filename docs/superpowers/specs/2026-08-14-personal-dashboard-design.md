@@ -130,6 +130,8 @@ key 统一 `strategy-front-user`。仅 user store 消费。
 
 无 lint/test 脚本，`npm run build`（`vue-tsc -b && vite build`）为唯一验证手段。手动核对：
 
+> 执行修正（2026-08-14，人工裁决）：两处 redirect 判断（路由守卫 + `handleAuthSuccess`）加固为同时拒绝 `//` 前缀，防协议相对 URL 开放重定向；登出时重置菜单 store 防跨账号菜单残留；`AppSidebar` 导航 key 改 `item.to ?? item.label` 防同名冲突。
+
 1. 未登入访问 `/dashboard` → 跳 `/login`
 2. 登入成功 → 跳 `/dashboard`，欢迎横幅显示账号
 3. 侧边栏渲染 `myMenuTree` 菜单
