@@ -17,7 +17,9 @@ const prefillAccount = ref('')
 /** 登入成功（含注册后自动登入）：回到工作台（支持 ?redirect= 回跳） */
 function handleAuthSuccess(): void {
   const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
-  void router.replace(redirect && redirect.startsWith('/') ? redirect : '/dashboard')
+  void router.replace(
+    redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/dashboard',
+  )
 }
 
 /** 切换至注册 */
