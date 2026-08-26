@@ -72,7 +72,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <!-- 桌面侧边栏：左固定 + 毛玻璃，滚动后自动收缩为图标栏 -->
+  <!-- 桌面侧边栏：悬浮岛式（四周留白 + 圆角 + 轻阴影），滚动后自动收缩为图标胶囊 -->
   <aside
     class="sidebar"
     :class="{ 'is-collapsed': collapsed }"
@@ -174,25 +174,30 @@ onBeforeUnmount(() => {
 /* ========== 桌面侧边栏 ========== */
 .sidebar {
   position: sticky;
-  top: 0;
+  top: var(--space-4);
   align-self: flex-start;
-  height: 100vh;
-  height: 100dvh;
+  height: calc(100dvh - var(--space-4) * 2);
   width: 232px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  margin: var(--space-4);
   padding: var(--space-4) var(--space-3);
   overflow-y: auto;
-  border-right: 1px solid var(--color-border-soft);
-  background-color: color-mix(in srgb, var(--color-bg) 62%, transparent);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  transition: width 0.3s ease;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-lg);
+  background-color: color-mix(in srgb, var(--color-bg) 72%, transparent);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  box-shadow: var(--shadow-soft);
+  transition:
+    width 0.3s ease,
+    border-radius 0.3s ease;
 }
 
 .sidebar.is-collapsed {
   width: 72px;
+  border-radius: var(--radius-full);
 }
 
 @media (max-width: 768px) {
@@ -217,9 +222,10 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border-radius: var(--radius-md);
-  background-color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-accent);
   color: var(--color-on-primary);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-on-primary) 45%, transparent);
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
   font-size: var(--text-lg);
@@ -293,8 +299,8 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-full);
   border: 1px solid var(--color-border-soft);
   background-color: color-mix(in srgb, var(--color-bg) 62%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   color: var(--color-ink);
 
   & svg {

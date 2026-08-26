@@ -68,7 +68,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   position: absolute;
   inset: 0;
   background-color: color-mix(in srgb, var(--color-ink) 30%, transparent);
-  backdrop-filter: blur(2px);
+  /* 遮罩模糊保持原弱化比例，随全局毛玻璃滑块缩放 */
+  backdrop-filter: blur(calc(var(--glass-blur) * 0.15));
 }
 
 .modal__panel {

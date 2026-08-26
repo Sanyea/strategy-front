@@ -59,12 +59,18 @@
   /* 投影（低透明墨色，无厚重阴影） */
   --shadow-soft: 0 4px 24px rgba(26, 26, 26, 0.06);
 
+  /* 毛玻璃调节：组件 backdrop-filter 模糊强度（GlassControl 滑块写入） */
+  --glass-blur: 14px;
+
+  /* 背景纱罩倍率：0=露壁纸原图，1=默认宣纸纱罩（GlassControl 滑块写入，作用于 --wash-wallpaper-bg） */
+  --veil-strength: 1;
+
   /* 16:9 水墨壁纸背景（applyWallpaper 随机注入最下层 url；此默认值供 JS 执行前的首帧兜底） */
   --wash-wallpaper-bg:
     linear-gradient(
       to bottom,
-      color-mix(in srgb, var(--color-bg) 84%, transparent),
-      color-mix(in srgb, var(--color-bg) 90%, transparent)
+      color-mix(in srgb, var(--color-bg) calc(84% * var(--veil-strength)), transparent),
+      color-mix(in srgb, var(--color-bg) calc(90% * var(--veil-strength)), transparent)
     ),
     url('/washpaintingstyle/16-9/scenery/1.avif');
 
