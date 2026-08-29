@@ -13,12 +13,12 @@ const CATEGORIES = [
   { name: 'scenery', count: 24 },
 ] as const
 
-/** 宣纸色渐变纱罩（透明度保证表单 / 内容可读，随主题 --color-bg 换色） */
+/** 宣纸色渐变纱罩（透明度保证表单 / 内容可读，随主题 --color-bg 换色；强度由 --veil-strength 倍率调节） */
 function veil(): string {
   return [
     'linear-gradient(to bottom,',
-    '  color-mix(in srgb, var(--color-bg) 84%, transparent),',
-    '  color-mix(in srgb, var(--color-bg) 90%, transparent)',
+    '  color-mix(in srgb, var(--color-bg) calc(84% * var(--veil-strength)), transparent),',
+    '  color-mix(in srgb, var(--color-bg) calc(90% * var(--veil-strength)), transparent)',
     ')',
   ].join('\n')
 }

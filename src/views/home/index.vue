@@ -394,8 +394,6 @@ const faqs: Faq[] = [
   justify-content: center;
   color: #f7f4ed;
   background-color: #a85448;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   /* 书签式投影：略下坠，模拟悬挂质感 */
   box-shadow:
     0 8px 18px rgba(168, 84, 72, 0.28),

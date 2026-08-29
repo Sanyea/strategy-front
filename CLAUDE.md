@@ -4,25 +4,25 @@
 
 ## 项目状态
 
-商业级前端工程骨架 — 基于 create-vite vue-ts 模板（Vite 8、Vue 3.5、TypeScript），已搭建完整目录结构与工程化配置。已落地：水墨首页（`/`）与登入/注册页（`/login`）。
+商业级前端工程骨架 — 基于 create-vite vue-ts 模板（Vite 8、Vue 3.5、TypeScript），已搭建完整目录结构与工程化配置。已落地：水墨首页（`/`）、登入/注册页（`/login`）与 RBAC 受保护页面（`/dashboard`、`/rbac/*`，登录后由后端菜单树动态注册）。
 
 已就位的接口工具链（后端 Spring Boot + SpringDoc OpenAPI）：
 
 - `@umijs/openapi` 代码生成：`npm run api:gen` 从 `http://localhost:8080/v3/api-docs` 生成 TS 接口代码到根目录临时目录 `.api-gen/`（已 gitignore），再手动移动到 `src/api/modules/<模块>/`。当前后端暴露两大模块：**auth**（register/login/mfa/refresh/logout，JWT 双 Token + 设备绑定）与 **rbac**（debug/permission/role 三个平级管理页，挂 RBAC 目录下；侧边栏按 `myMenuTree` 渲染并前端二次过滤，见下方说明）
 - `src/api/modules/` 结构（生成代码，勿手改业务逻辑）：
-  - `request.ts` — axios 请求封装：baseURL 读 `VITE_API_BASE_URL`、Bearer 注入、业务码校验（信封 `code === 200` 成功，HTTP 200 但 code 非 200 抛 `ApiError`）、401 静默刷新重试、设备 ID 持久化
+  - `request.ts` — axios 请求封装：baseURL 读 `VITE_API_BASE_URL`、Bearer 注入、业务码校验（信封 `code === 200` 成功，HTTP 200 但 code 非 200 抛 `ApiError`）、401 单飞去重刷新重试（刷新请求带 `skipAuthRefresh` 标记，其自身 401 不触发二次刷新，防单飞死锁）、按 `accessExpiresIn` 主动预刷新（剩 <30s 提前轮换，`setToken` 自动排定时器）、设备 ID 持久化；刷新失败清凭证并广播 `auth:session-expired` 事件，由 `main.ts` 监听统一收尾（清用户态/卸动态路由/提示/回登入页）
   - `typings.d.ts` — 全模块共享 `namespace API` 类型声明（auth + rbac 合并，模块级共用，勿拆回各模块）
   - `auth/`、`rbac/` — 按模块接口文件；`index.ts` 为聚合 barrel（默认导出 `{ auth, rbacRole, rbacPermission, ... }`）
   - **手动移动后必须修正跨模块导入**：生成器会写成 `../.api-gen/...`，移到 `src/api/modules/` 后须改为 `./auth/auth.ts` 等相对路径，勿依赖 gitignored 的 `.api-gen`
 - 开发代理：`vite.config.ts` 中 `/api` → `http://localhost:8080`（去掉 `/api` 前缀，后端接口位于根路径）
 
-> 注意：路由已拆为「基础公共静态路由 + 动态路由」：`src/router/index.ts` 仅保留首页 `/`、登入注册 `/login`；`/dashboard` 与 `/rbac/*` 等受保护路由由路由守卫登录后拉 `myMenuTree` 经 `src/router/dynamic.ts` 动态 `addRoute`（顶层锚 `DefaultLayout`，深层目录拍平，`componentPath` 经 `import.meta.glob('/src/views/**/*.vue')` 解析）。**404 兜底必须等动态路由全部 addRoute 完成之后再注册**，否则会拦截动态路由；登出时 `uninstallDynamicRoutes` 清理旧账号路由防跨账号残留。`DefaultLayout` 单一认证布局（侧边栏后端菜单树 + 二次权限过滤 + 面包屑 + 灵动岛）；`BlankLayout` 尚未实现，为计划中内容。styles 体系已就位（见「水墨设计系统」）。`src/api/` 下为生成代码，勿手改业务逻辑。
+> 注意：路由已拆为「基础公共静态路由 + 动态路由」：`src/router/index.ts` 仅保留首页 `/`、登入注册 `/login`；`/dashboard` 与 `/rbac/*` 等受保护路由由路由守卫登录后拉 `myMenuTree` 经 `src/router/dynamic.ts` 动态 `addRoute`（顶层锚 `DefaultLayout`，深层目录拍平，`componentPath` 经 `import.meta.glob('/src/views/**/*.vue')` 解析）。**404 兜底必须等动态路由全部 addRoute 完成之后再注册**，否则会拦截动态路由；登出时 `uninstallDynamicRoutes` 清理旧账号路由防跨账号残留。`DefaultLayout` 单一认证布局（悬浮岛式侧边栏 + 后端菜单树二次过滤 + 灵动岛，无顶部导航条/面包屑）；`BlankLayout` 尚未实现，为计划中内容。styles 体系已就位（见「水墨设计系统」）。`src/api/` 下为生成代码，勿手改业务逻辑。
 
 ## 水墨设计系统
 
 全站采用极简新中式水墨风，四套专属色系，CSS 变量驱动，零新增依赖（纯 CSS）。
 
-- 文件：色值 token 在 `src/styles/variables.css`；入口 `src/styles/index.css`（variables → reset → common）
+- 文件：色值 token 在 `src/styles/variables.css`（含 `--glass-blur`、`--veil-strength` 调节变量）；入口 `src/styles/index.css`（variables → reset → common）
 - 语义色值命名，跨组件统一消费，禁止在组件里直接写十六进制色值：
   - 底色：`--color-bg` 宣纸 / `--color-bg-soft` 卡片
   - 文字：`--color-ink` 标题强调 / `--color-text` 正文 / `--color-text-secondary` 次级 / `--color-text-weak` 弱化占位
@@ -50,14 +50,16 @@
   - `components/RegisterCard.vue` — 印章步骤条四步：方式 → 账号 → 资料 → 完成；**仅后端信封 `code === 200` 返回后才进入完成步**（已立 + 双 Token 自动登入）；注册完成带账号回登入预填
   - 支撑工具：`src/utils/device.ts`（buildDeviceInfo / detectChannel 渠道识别）、`src/utils/error.ts`（ApiError + readApiErrorMessage 提取后端 message）
 - 主题切换灵动岛：`src/components/business/ThemeIsland.vue`（悬浮吸顶毛玻璃，滚动后收缩为半透明胶囊，鼠标移入/键盘聚焦展开；写 `<html data-theme>` + localStorage）
-- 侧边栏导航：`src/layouts/AppSidebar.vue`（左侧固定 + 毛玻璃，滚动后自动收缩为图标栏、回顶/鼠标移入展开，移动端 off-canvas 抽屉 + 汉堡触发；`items` 走 `NavItem[]` prop，支持嵌套目录渲染——`AppSidebarNav.vue` 递归组件，叶子路由项渲染为 router-link，由后端 `myMenuTree` 二次过滤后驱动）
+- 视觉调节齿轮：`src/components/business/GlassControl.vue`（右下角悬浮，弹层两滑块调 `--glass-blur` 毛玻璃强度 / `--veil-strength` 背景纱罩倍率，值持久化 localStorage；`App.vue` 全局挂载单实例，全站毛玻璃表面统一消费 `--glass-blur`）
+- 全局 toast：`src/components/base/BaseToastHost.vue`（Teleport 到 body，右下角，`useToast()` 单例推送）；宿主在 `App.vue` 根级挂载，任意路由（含登入页）均可见
+- 侧边栏导航：`src/layouts/AppSidebar.vue`（悬浮岛式：四周留白 + 圆角 + 轻阴影，滚动后收缩为图标胶囊、回顶/鼠标移入展开，移动端 off-canvas 抽屉 + 汉堡触发；`items` 走 `NavItem[]` prop，支持嵌套目录渲染——`AppSidebarNav.vue` 递归组件，叶子路由项渲染为 router-link，由后端 `myMenuTree` 二次过滤后驱动）
 
 ## 常用命令
 
 - `npm run dev` — 启动 Vite 开发服务器（默认端口 5173）
 - `npm run build` — 类型检查 + 生产构建：实际执行 `vue-tsc -b && vite build`，产物输出到 `dist/`
 - `npm run preview` — 本地预览生产构建产物
-- `npm run api:gen` — 从后端 OpenAPI spec 生成接口代码（`@umijs/openapi`，产物到 `src/api/`）
+- `npm run api:gen` — 从后端 OpenAPI spec 生成接口代码（`@umijs/openapi`，产物到根目录 `.api-gen/`，再手动移动 `src/api/modules/<模块>/`）
 - `npm install` — 安装依赖
 
 当前无 lint/test 脚本（ESLint/Prettier 配置文件已就位，但依赖未安装、脚本未添加）。`npm run build` 是唯一的验证手段。
@@ -105,10 +107,12 @@ export function getUserList(params: UserListParams) {
 多模块都会用到的组件放这里，仅单页面使用的组件禁止放入。
 
 - `base/`：基础 UI 组件层（对第三方 UI 库的二次封装，与业务完全解耦）
-  - `BaseTable`（分页/查询/列配置）、`BaseButton`（权限控制/防抖）、`BaseDialog`（统一标题/底部按钮）、`BaseForm`（表单校验/提交流程）
+  - 已落地：`BaseModal`（弹层）、`BasePagination`（分页）、`BaseToastHost`（全局 toast 渲染宿主）
+  - 规划中：`BaseTable`（分页/查询/列配置）、`BaseButton`（权限控制/防抖）、`BaseDialog`（统一标题/底部按钮）、`BaseForm`（表单校验/提交流程）
   - 保持与原 UI 库 API 兼容，通过 props 扩展能力，便于后续换 UI 库
 - `business/`：通用业务组件层（多个页面复用的业务组件）
-  - `UserAvatar`（头像+在线状态）、`UploadFile`（文件上传）、`DictSelect`（字典下拉）、`ImagePreview`（图片预览）
+  - 已落地：`ThemeIsland`（主题灵动岛）、`GlassControl`（视觉调节齿轮）
+  - 规划中：`UserAvatar`（头像+在线状态）、`UploadFile`（文件上传）、`DictSelect`（字典下拉）、`ImagePreview`（图片预览）
   - 必须通过 props 接收数据，不直接耦合具体页面接口，复杂逻辑抽离到 composables
 
 ### 组件归属决策树
@@ -124,12 +128,13 @@ export function getUserList(params: UserListParams) {
 
 以 `use` 开头的函数，封装可复用的响应式逻辑：
 
-- `useTable.ts`（表格分页/查询/重置）、`useUpload.ts`（文件上传）、`useDarkMode.ts`（暗黑模式）、`usePermission.ts`（权限判断）、`useDebounce.ts`（防抖封装）
+- 已落地：`useToast.ts`（全局 toast 单例推送，配合 `BaseToastHost` 渲染）
+- 规划中：`useTable.ts`（表格分页/查询/重置）、`useUpload.ts`（文件上传）、`useDarkMode.ts`（暗黑模式）、`usePermission.ts`（权限判断）、`useDebounce.ts`（防抖封装）
 - 返回响应式状态和操作方法，不依赖具体组件，纯逻辑封装
 
 ### `src/directives/` — 全局自定义指令
 
-在 `main.ts` 中全局注册，模板中使用：
+在 `main.ts` 中全局注册，模板中使用。当前目录为空，以下为规划中的指令：
 
 - `v-permission`（权限控制）、`v-copy`（点击复制）、`v-debounce`（防抖点击）、`v-lazy`（图片懒加载）
 
@@ -150,7 +155,7 @@ export const UserStatusLabel: Record<UserStatus, string> = {
 
 只负责结构框架，不包含业务逻辑，通过 `<router-view />` 渲染子页面。
 
-- `DefaultLayout.vue`：单一认证布局（侧边栏后端菜单树 + 二次权限过滤 + 面包屑 + 灵动岛 + 内容区），`/dashboard` 与 `/rbac/*` 共用
+- `DefaultLayout.vue`：单一认证布局（侧边栏后端菜单树 + 二次权限过滤 + 灵动岛 + 内容区，无顶部导航条/面包屑），`/dashboard` 与 `/rbac/*` 共用
 - `BlankLayout.vue`：空白布局（登录页、全屏页使用，尚未实现）
 
 ### `src/router/` — 路由配置
@@ -168,7 +173,8 @@ export const UserStatusLabel: Record<UserStatus, string> = {
 
 ### `src/stores/modules/`
 
-- `user.ts`（用户信息/Token/登入登出）、`app.ts`（主题/侧边栏/语言）、`permission.ts`（权限路由/菜单）
+- `user.ts`（用户信息 + 权限码集，登入/登出时清空）、`menu.ts`（`myMenuTree` 原始树 + 按权限码二次过滤生成侧边栏导航项）
+- 主题不落 store：`ThemeIsland` 写 `<html data-theme>` + localStorage；语言/侧边栏折叠态等未入 store
 
 ### `src/styles/` — 全局样式体系
 
@@ -183,7 +189,8 @@ export const UserStatusLabel: Record<UserStatus, string> = {
 
 ### `src/utils/` — 纯工具函数
 
-- `storage.ts`（localStorage 封装+过期时间）、`date.ts`（日期格式化）、`validate.ts`（表单校验）、`auth.ts`（Token 存取）、`download.ts`（文件下载）
+- 已落地：`account.ts`（登入用户信息持久化）、`device.ts`（设备信息/渠道识别）、`error.ts`（`ApiError` + `readApiErrorMessage`）、`permission.ts`（权限码判断，哨兵 `*` 全权限）、`wallpaper.ts`（随机水墨壁纸）；Token 存取在 `api/modules/request.ts`
+- 规划中：`storage.ts`（localStorage 封装+过期时间）、`date.ts`（日期格式化）、`validate.ts`（表单校验）、`download.ts`（文件下载）
 - 纯函数，不依赖 Vue 实例、不依赖业务代码，输入明确、输出可预测
 
 ### `src/views/` — 业务页面

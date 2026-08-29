@@ -113,8 +113,8 @@ onBeforeUnmount(() => {
   border: 1px solid var(--color-border-soft);
   /* 毛玻璃：半透明底色 + 背景模糊 */
   background-color: color-mix(in srgb, var(--color-bg) 62%, transparent);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
   box-shadow: var(--shadow-soft);
   pointer-events: auto;
   transition:
