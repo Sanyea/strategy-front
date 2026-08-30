@@ -1,0 +1,28 @@
+# 依赖与产物
+node_modules
+dist
+dist-ssr
+*.local
+
+# 版本控制
+.git
+.gitignore
+
+# 本地环境文件（构建时用 ARG 注入，勿打包 .env.development 等）
+.env.development
+.env.test
+.env*.local
+
+# 编辑器 / 参考数据
+.idea
+.vscode
+awesome-design-md-main
+design-tokens-collection.md
+
+# 接口生成临时目录
+.api-gen
+
+# 日志
+*.log
+logs
+

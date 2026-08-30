@@ -31,8 +31,9 @@
   - 点缀：`--color-accent`（朱砂）/ `--color-accent-blue`（青蓝）/ `--color-accent-green`（石绿）/ `--color-accent-soft`
   - 水墨晕染：`--wash-mist` / `--wash-mist-2`（body 背景远山雾霭，透明度渐变）
 - 16:9 水墨壁纸随机背景：`src/utils/wallpaper.ts`（`applyWallpaper` 挂载前随机一张，与宣纸纱罩整体写入 `--wash-wallpaper-bg`，同一会话内保持稳定，避免页面切换闪烁）
-  - 图片来源 `public/washpaintingstyle/16-9/{animal,city,scenery}/`，三分类共 54 张；新增/删除图片需同步 `CATEGORIES` 计数表
-  - 图片资源**不入 git**（`.gitignore` 排除 `public/washpaintingstyle/`），部署时随 `public/` 目录提供；克隆仓库后需自行补充壁纸目录
+  - 图片来源 `public/washpaintingstyle/16-9/{animal,city,scenery}/`，三分类共 54 张 .avif；新增/删除图片需同步 `CATEGORIES` 计数表
+  - 图片资源**已入 git**（`.gitignore` 排除项已移除），随仓库分发，Dockerfile 构建直接打包进镜像（`.dockerignore` 不再排除）
+  - **规划变更（后续实施）**：仅保留**默认壁纸**本地（随 `src/assets` 打包或 `public/` 留单张），其余壁纸改由**后端接口下发**（列表 + URL），前端拉取后随机/按主题选取。届时：`wallpaper.ts` 改为异步拉取、`CATEGORIES` 计数表退役、nginx `location /washpaintingstyle/` 与 Dockerfile 打包策略一并调整
   - 全局消费：`body` 背景 `background-image: var(--wash-wallpaper-bg)`（`src/styles/reset.css`），所有页面自动生效；`:root` 兜底默认值在 `src/styles/variables.css`。**勿用 `url(var(...))` 形式**，会被构建期 CSS 压缩器（lightningcss）拒绝
 - 主题切换：`<html data-theme="mono|mist|tea|wash">`，缺省即方案一（`:root` 兜底）
   - `mono` 经典墨韵黑白（默认）/ `mist` 青灰烟雨 / `tea` 茶褐古雅 / `wash` 淡彩水墨（基底同 mono + 三色点缀）
@@ -63,6 +64,12 @@
 - `npm install` — 安装依赖
 
 当前无 lint/test 脚本（ESLint/Prettier 配置文件已就位，但依赖未安装、脚本未添加）。`npm run build` 是唯一的验证手段。
+
+> **`package-lock.json` 维护（CI `Verify Lock` 强约束）**：Jenkins `Verify Lock` stage 用 node 24.9.0-alpine 自带 npm 11.6.0、在**无 npmrc** 环境下跑 `npm install --package-lock-only --ignore-scripts`，要求 lock 零 diff；若本地重生成配置与 CI 不一致，CI 会重写 lock 直接构建失败。本地重生成必须模拟 CI 环境：
+> - 禁用 `legacy-peer-deps`（本地 `~/.npmrc` 默认开启，会改变依赖理想树）：加 `--no-legacy-peer-deps`
+> - registry 对齐 `https://registry.npmjs.org/`（npm 信任 lock 已有 resolved URL，仅新解析条目取当前 registry）
+> - 完整命令：`npm install --package-lock-only --ignore-scripts --no-legacy-peer-deps --registry=https://registry.npmjs.org/`
+> - 当前 lock 为 npm 11 结构（`devOptional` 标记、冲突包嵌套），勿用 npm 10 重写
 
 ## 架构
 
@@ -301,7 +308,7 @@ views/
 
 ## 其他说明
 
-- 已验证环境：Node 20.19.5、npm 10.8.2
+- 已验证环境：Node 24.9.0、npm 10.8.2（`packageManager` 固定，corepack 强制；本地/CI node 容器自带 npm 11.6.0 亦兼容）。依赖树 engines 要求 node >=24.11，当前固定 24.9.0 会报 EBADENGINE **警告**但不阻塞构建（`npm run build` 实测通过）；后续升 node >=24.11 可消除
 - `.idea/`（WebStorm 配置目录）已被 git 忽略
 - `design-tokens-collection.md` — 62 个品牌 design token 合集（colors/typography/rounded/spacing），数据源为 `awesome-design-md-main/`
 - `awesome-design-md-main/` — 参考仓库克隆（design token 数据源），非项目代码，勿纳入构建
