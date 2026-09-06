@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 # ============ 构建阶段 ============
 # 依赖树（vue-router 5 / vite 8 / babel 8）要求 node >=24.11，alpine 锁大版本保证可复现
-FROM node:24.9.0-alpine AS build
+# 基础镜像从 Harbor library 拉取（NodePort HTTP 地址，节点已配 insecure_registries）
+FROM 192.168.254.130:32100/library/node:24.9.0-alpine AS build
 
 WORKDIR /app
 
@@ -22,7 +23,7 @@ ENV VITE_API_BASE_URL=${VITE_API_BASE_URL:-/api} \
 RUN npm run build
 
 # ============ 运行阶段 ============
-FROM nginx:alpine AS runner
+FROM 192.168.254.130:32100/library/nginx:alpine AS runner
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html

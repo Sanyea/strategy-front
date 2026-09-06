@@ -1,7 +1,7 @@
 pipeline {
     parameters {
-        string(name: 'SERVICE_NAME', defaultValue: 'strategyfront', description: '项目名/镜像名（必填）')
-        string(name: 'IMAGE_TAG', defaultValue: 'dev-20260829', description: '镜像标签（必填）')
+        string(name: 'SERVICE_NAME', defaultValue: 'strategyfrontend', description: '项目名/镜像名（必填，Harbor strategy 项目下）')
+        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: '镜像标签（必填，需与 ci/deploy 清单引用一致）')
     }
 
     agent {
@@ -15,28 +15,14 @@ metadata:
 spec:
   containers:
   - name: jnlp
-    image: jenkins/inbound-agent:3309.v27b_9314fd1a_4-1-jdk21
-    env:
-    - name: HTTP_PROXY
-      value: "http://192.168.3.23:7890"
-    - name: HTTPS_PROXY
-      value: "http://192.168.3.23:7890"
-    - name: NO_PROXY
-      value: "localhost,127.0.0.1,.svc.cluster.local,10.96.0.0/12,10.244.0.0/16,192.168.109.0/24"
+    image: 192.168.254.130:32100/library/jenkins/inbound-agent:3309.v27b_9314fd1a_4-1-jdk21
     volumeMounts:
     - name: workspace
       mountPath: /home/jenkins/agent/workspace
   - name: kaniko
-    image: gcr.io/kaniko-project/executor:v1.13.0-debug
+    image: 192.168.254.130:32100/library/kaniko-project-executor:v1.13.0-debug
     command: ["/busybox/sh"]
     args: ["-c", "mkdir -p /usr/bin && ln -sf /busybox/env /usr/bin/env && mount -t proc proc /proc > /dev/null 2>&1 || true && sleep infinity"]
-    env:
-    - name: HTTP_PROXY
-      value: "http://192.168.3.23:7890"
-    - name: HTTPS_PROXY
-      value: "http://192.168.3.23:7890"
-    - name: NO_PROXY
-      value: "localhost,127.0.0.1,.svc.cluster.local,10.96.0.0/12,10.244.0.0/16,192.168.109.0/24"
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker/config.json
@@ -59,16 +45,9 @@ spec:
       runAsGroup: 0
     tty: true
   - name: node
-    image: node:24.9.0-alpine
+    image: 192.168.254.130:32100/library/node:24.9.0-alpine
     command: ["/bin/sh"]
     args: ["-c", "sleep infinity"]
-    env:
-    - name: HTTP_PROXY
-      value: "http://192.168.3.23:7890"
-    - name: HTTPS_PROXY
-      value: "http://192.168.3.23:7890"
-    - name: NO_PROXY
-      value: "localhost,127.0.0.1,.svc.cluster.local,10.96.0.0/12,10.244.0.0/16,192.168.109.0/24"
     volumeMounts:
     - name: workspace
       mountPath: /home/jenkins/agent/workspace
@@ -91,7 +70,9 @@ spec:
     }
 
     environment {
-        HARBOR_HOST = 'harbor-release-core.harbor.svc.cluster.local:80'
+        // Harbor NodePort（HTTP），与 ci/deploy 清单及节点 insecure_registries 配置保持一致
+        HARBOR_HOST = '192.168.254.130:32100'
+        HARBOR_PROJECT = 'strategy'
     }
 
     stages {
@@ -113,26 +94,6 @@ spec:
         stage('Checkout') {
             steps {
                 checkout scm
-            }
-        }
-
-        stage('Debug Auth') {
-            steps {
-                container('kaniko') {
-                    sh """
-                        echo "=== 打印 config.json 内容 ==="
-                        cat /kaniko/.docker/config.json
-
-                        echo "=== 测试内部 Harbor API 认证（获取 token） ==="
-                        wget --server-response -O- http://${HARBOR_HOST}/v2/ 2>&1 | grep -i "www-authenticate" || true
-
-                        echo "=== 使用 Basic Auth 直接推送（模拟） ==="
-                        wget --post-data='' \
-                             --header='Authorization: Basic YWRtaW46SGFyYm9yMTIzNDU2' \
-                             --server-response -O- \
-                             http://${HARBOR_HOST}/v2/${SERVICE_NAME}/${SERVICE_NAME}/blobs/uploads/ 2>&1 || true
-                    """
-                }
             }
         }
 
@@ -172,11 +133,10 @@ spec:
                         /kaniko/executor \
                             --context=. \
                             --dockerfile=Dockerfile \
-                            --destination=${HARBOR_HOST}/${SERVICE_NAME}/${SERVICE_NAME}:${IMAGE_TAG} \
+                            --destination=${HARBOR_HOST}/${HARBOR_PROJECT}/${SERVICE_NAME}:${IMAGE_TAG} \
                             --cache=true \
                             --insecure \
                             --insecure-registry=${HARBOR_HOST} \
-                            --skip-tls-verify \
                             --verbosity=debug
                     """
                 }
@@ -191,7 +151,7 @@ spec:
             echo "镜像标签: ${env.IMAGE_TAG}"
         }
         success {
-            echo "🎉 镜像构建成功: ${HARBOR_HOST}/${SERVICE_NAME}/${SERVICE_NAME}:${IMAGE_TAG}"
+            echo "🎉 镜像构建成功: ${HARBOR_HOST}/${HARBOR_PROJECT}/${SERVICE_NAME}:${IMAGE_TAG}"
         }
         failure {
             echo "❌ 构建失败，请检查日志。"
